@@ -22,8 +22,6 @@ const SitemapGenerator = require('sitemap-generator');
 const puppeteer = require('puppeteer');
 const devices = require('puppeteer/DeviceDescriptors');
 const _cliProgress = require('cli-progress');
-const ScreenshotsCapturerFn = require('./capture');
-const screenshotsCapturer = new ScreenshotsCapturerFn('desktop');
 
 // create generator
 const generator = SitemapGenerator(argv.url, {
