@@ -9,10 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "phantom": "^4.0.12",
+    "cli-progress": "^1.8.0",
     "puppeteer": "^1.2.0",
     "sitemap-generator": "^8.0.0",
-    "webpage": "^0.3.0",
     "xml2js": "^0.4.19",
     "yargs": "^11.0.0"
   }

@@ -3,10 +3,15 @@
  */
 const puppeteer = require('puppeteer');
 const devices = require('puppeteer/DeviceDescriptors');
+const _cliProgress = require('cli-progress');
 
 const sitemapParser = require('./sitemap-parser');
 
 const captureScreenshots = async () => {
+
+    // create a new progress bar instance and use shades_classic theme
+    const bar1 = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
+
     let urls = await sitemapParser.getUrls(__dirname + '/sitemap.xml');
     const devicesToEmulate = [
         'iPhone 6',
@@ -23,6 +28,9 @@ const captureScreenshots = async () => {
     // ];
     // urls = urls.slice(0, 10);
 
+    // start the progress bar with a total value of 200 and start value of 0
+    bar1.start(urls.length, 0);
+
     const browser = await puppeteer.launch();
 
     // capture a screenshot of each device we wish to emulate (`devicesToEmulate`)
@@ -30,19 +38,29 @@ const captureScreenshots = async () => {
     // await page.emulate(devices[device]);
 
     console.time("Start generating screens");
+    let i = 0;
     for (let url of urls) {
         const imageName = url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
 
-        console.log(`Opening url "${url}"`);
+        // console.log("Creating new page");
         const page = await browser.newPage();
-        await page.setViewport({width: 1440,height: 10});
+        page.setViewport({width: 1440,height: 10});
+        // console.log(`Opening url "${url}"`);
         await page.goto(url);
         await page.screenshot({path: `desktop/${imageName}.png`, fullPage: true});
+        i++;
+
+        // update the current value in your application..
+        bar1.update(i);
     }
+    console.log("\n");
     console.timeEnd("Start generating screens");
     // }
 
-    await browser.close()
+    await browser.close();
+
+    // stop the progress bar
+    bar1.stop();
 };
 
 captureScreenshots();
