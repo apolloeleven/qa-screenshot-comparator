@@ -1,0 +1,19 @@
+{
+  "name": "my-sitemap-generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "phantom": "^4.0.12",
+    "puppeteer": "^1.2.0",
+    "sitemap-generator": "^8.0.0",
+    "webpage": "^0.3.0",
+    "xml2js": "^0.4.19",
+    "yargs": "^11.0.0"
+  }
+}
