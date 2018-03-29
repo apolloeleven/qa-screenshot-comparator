@@ -63,12 +63,12 @@ let getUrls = async (url) => {
         });
         generator.on('done', async ($content) => {
             console.timeEnd("Sitemap generation");
-            fs.writeFileSync(URLS_FILE, JSON.stringify(urls));
+            fs.writeFileSync(URLS_FILE, JSON.stringify(urls, undefined, 2));
             resolve(urls);
         });
 
         console.time("Sitemap generation");
-        if (argv.generateSitemap || !fs.existsSync(URLS_FILE)){
+        if (argv.generateSitemap || !fs.existsSync(URLS_FILE)) {
             generator.start();
         } else {
             let data = fs.readFileSync(URLS_FILE, 'utf8');
@@ -83,9 +83,17 @@ let generateScreenshots = async (urls) => {
     progressBar.start(urls.length, 0);
 
     let i = 0;
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({headless: false});
     console.time("Start screenshot generation");
     for (let url of urls) {
+
+        // if (i % 2 === 0) {
+        //     console.log("Start taking screenshot");
+        //     takeScreenshot(browser, url).then(() => {
+        //         console.log("Finish taking screenshot");
+        //     });
+        // }
+        // continue;
         // console.log(`Start generating ${url}`);
         const imageName = url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
 
@@ -120,22 +128,30 @@ let takeScreenshot = (browser, url) => {
         // console.log(`Start generating ${url}`);
         const imageName = url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
         browser.newPage().then((page) => {
-            return new Promise((resolve, reject) => {
-                page.setViewport({width: 1440, height: 10})
-                    .then(() => {
-                        return page.goto(url);
-                    })
-                    .then(() => {
-                        return page.screenshot({path: `${IMAGE_FOLDER}/${imageName}.png`, fullPage: true});
-                    })
-                    .then(() => {
-                        resolve(page);
-                        return page.close();
-                    })
-                    .catch(err => {
-                        reject(err);
-                    });
+            console.log(`Set viewport `);
+            return new Promise(async (resolve, reject) => {
+                await page.setViewport({width: 1440, height: 10});
+                resolve(page);
+            })
+        }).then((page) => {
+            console.log(`Go to page`);
+            return new Promise(async (resolve, reject) => {
+                await page.goto(url);
+                resolve(page);
             });
+        }).then((page) => {
+            console.log(`Screenshot`);
+            return new Promise(async (resolve, reject) => {
+                await page.screenshot({path: `${IMAGE_FOLDER}/${imageName}.png`, fullPage: true});
+                resolve(page);
+            })
+        }).then((page) => {
+            console.log(`Close`);
+            return page.close();
+        }).then(() => {
+            resolve();
+        }).catch(err => {
+            reject(err);
         });
     });
 };
