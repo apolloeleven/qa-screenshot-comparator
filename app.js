@@ -9,28 +9,44 @@ const devices = require('puppeteer/DeviceDescriptors');
 const _cliProgress = require('cli-progress');
 
 const argv = yargs
-    .options({
-        generateSitemap: {
-            demand: false,
-            alias: 's',
-            describe: 'If you want to generate sitemap also or use previously generated',
-            boolean: true
-        },
-        url: {
-            demand: true,
-            alias: 'u',
-            describe: 'Please provide website url',
-            string: true
-        }
+
+    .option('generateSitemap', {
+        demand: false,
+        alias: 'sm',
+        describe: 'If you want to generate sitemap also or use previously generated',
+        boolean: true
     })
-    .help()
+    .option('url', {
+        demand: true,
+        alias: 'u',
+        describe: 'Please provide website url',
+        string: true
+    })
+    .option('size', {
+        alias: 's',
+        describe: 'Choose the resolution',
+        choices: ['desktop', 'laptop', 'tablet', 'mobile'],
+        demand: true,
+        string: true
+    })
+    .help('h')
     .alias('help', 'h')
     .argv
 ;
+
+const SCREEN_RESOLUTIONS = {
+    desktop: {width: 1440, height: 10},
+    laptop: {width: 1024, height: 10},
+    tablet: {width: 768, height: 10},
+    mobile: {width: 360, height: 10},
+};
+
+const RESOLUTION = SCREEN_RESOLUTIONS[argv.size];
+
 const progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
 
 const RUNTIME = __dirname + '/runtime';
-const IMAGE_FOLDER = RUNTIME + '/desktop';
+const IMAGE_FOLDER = RUNTIME + `/${argv.size}`;
 const URLS_FILE = RUNTIME + '/urls.json';
 
 if (!fs.existsSync(RUNTIME)) {
@@ -95,7 +111,7 @@ let generateScreenshots = async (urls) => {
         console.timeEnd('Everything generated');
         // let pages = await browser.pages();
         // if (pages.length) {
-            browser.close();
+        browser.close();
         // }
 
         // stop the progress bar
@@ -133,7 +149,7 @@ let takeScreenshot = (browser, url) => {
         browser.newPage().then((page) => {
             // console.log(`Set viewport `);
             return new Promise(async (resolve, reject) => {
-                await page.setViewport({width: 1440, height: 10});
+                await page.setViewport(RESOLUTION);
                 resolve(page);
             })
         }).then((page) => {
