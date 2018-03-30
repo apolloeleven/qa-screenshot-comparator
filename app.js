@@ -27,6 +27,8 @@ const argv = yargs
     .alias('help', 'h')
     .argv
 ;
+const progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
+
 const RUNTIME = __dirname + '/runtime';
 const IMAGE_FOLDER = RUNTIME + '/desktop';
 const URLS_FILE = RUNTIME + '/urls.json';
@@ -39,10 +41,12 @@ if (!fs.existsSync(IMAGE_FOLDER)) {
     fs.mkdirSync(IMAGE_FOLDER);
 }
 
+let urls;
 
 let run = async () => {
 
-    let urls = await getUrls(argv.url);
+    console.time('Everything generated');
+    urls = await getUrls(argv.url);
     generateScreenshots(urls).catch(err => {
         console.log(err);
     });
@@ -58,7 +62,7 @@ let getUrls = async (url) => {
     return new Promise((resolve, reject) => {
         let urls = [];
         generator.on('add', (url) => {
-            console.log(`Grabbed url ${url}`);
+            // console.log(`Grabbed url ${url}`);
             urls.push(url);
         });
         generator.on('done', async ($content) => {
@@ -79,47 +83,46 @@ let getUrls = async (url) => {
 
 let generateScreenshots = async (urls) => {
     // create a new progress bar instance and use shades_classic theme
-    const progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
+
     progressBar.start(urls.length, 0);
 
-    let i = 0;
-    const browser = await puppeteer.launch({headless: false});
-    console.time("Start screenshot generation");
-    for (let url of urls) {
+    const browser = await puppeteer.launch({headless: true});
 
-        // if (i % 2 === 0) {
-        //     console.log("Start taking screenshot");
-        //     takeScreenshot(browser, url).then(() => {
-        //         console.log("Finish taking screenshot");
-        //     });
+    console.time("All Screenshot generation");
+    screenshotsFor(browser, urls, 0, 2).then(() => {
+        console.log("");
+        console.timeEnd(`All Screenshot generation`);
+        console.timeEnd('Everything generated');
+        // let pages = await browser.pages();
+        // if (pages.length) {
+            browser.close();
         // }
-        // continue;
-        // console.log(`Start generating ${url}`);
-        const imageName = url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
 
-        // console.log("Creating new page");
-        const page = await browser.newPage();
-        page.setViewport({width: 1440, height: 10});
-        // console.log(`Opening url "${url}"`);
-        await page.goto(url);
-        await page.screenshot({path: `${IMAGE_FOLDER}/${imageName}.png`, fullPage: true});
-        page.close();
-        // console.log(`Finish generating ${url}`);
-        i++;
-        progressBar.update(i);
-    }
-    let pages = await browser.pages();
-    if (pages.length) {
-        await browser.close();
-    }
-    console.log('\n');
-    console.timeEnd('Start screenshot generation');
-    // stop the progress bar
-    progressBar.stop();
+        // stop the progress bar
+        progressBar.stop();
+    });
 };
 
-let screenshotsFor = (urls) => {
-    let promises = [];
+let screenshotsFor = (browser, urls, startIndex, limit) => {
+    return new Promise((resolve, reject) => {
+        let promises = [];
+        let size = Math.min(urls.length, startIndex + limit);
+        for (let i = startIndex; i < size; i++) {
+            let promise = takeScreenshot(browser, urls[i]);
+            promises.push(promise);
+        }
+        Promise.all(promises).then(() => {
+            // console.log(`Taken screenshots for range ${startIndex} - ${startIndex + limit}`);
+            if (startIndex >= urls.length) {
+                resolve()
+            } else {
+                // console.log(`Calling screenshots for range ${startIndex + limit} - ${startIndex + limit + limit}`);
+                screenshotsFor(browser, urls, startIndex + limit, limit).then(() => {
+                    resolve();
+                });
+            }
+        });
+    })
 
 };
 
@@ -128,25 +131,26 @@ let takeScreenshot = (browser, url) => {
         // console.log(`Start generating ${url}`);
         const imageName = url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
         browser.newPage().then((page) => {
-            console.log(`Set viewport `);
+            // console.log(`Set viewport `);
             return new Promise(async (resolve, reject) => {
                 await page.setViewport({width: 1440, height: 10});
                 resolve(page);
             })
         }).then((page) => {
-            console.log(`Go to page`);
+            // console.log(`Go to page`);
             return new Promise(async (resolve, reject) => {
                 await page.goto(url);
                 resolve(page);
             });
         }).then((page) => {
-            console.log(`Screenshot`);
+            // console.log(`Screenshot for ${url}`);
+            progressBar.update(urls.indexOf(url));
             return new Promise(async (resolve, reject) => {
                 await page.screenshot({path: `${IMAGE_FOLDER}/${imageName}.png`, fullPage: true});
                 resolve(page);
             })
         }).then((page) => {
-            console.log(`Close`);
+            // console.log(`Close`);
             return page.close();
         }).then(() => {
             resolve();
