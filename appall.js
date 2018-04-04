@@ -12,13 +12,13 @@ async function init() {
     console.time("Screenshot generation");
     let urls = await Sitemap.generate(argv.url, argv.generateSitemap);
     console.log("Start promise1");
-    let promise1 = exec(`node app.js -u ${argv.url} -s=desktop`);
+    let promise1 = exec(`node app.js -u ${argv.url} -s=desktop -l=${argv.language}`);
     console.log("Start promise2");
-    let promise2 = exec(`node app.js -u ${argv.url} -s=laptop`);
+    let promise2 = exec(`node app.js -u ${argv.url} -s=laptop -l=${argv.language}`);
     console.log("Start promise3");
-    let promise3 = exec(`node app.js -u ${argv.url} -s=tablet`);
+    let promise3 = exec(`node app.js -u ${argv.url} -s=tablet -l=${argv.language}`);
     console.log("Start promise4");
-    let promise4 = exec(`node app.js -u ${argv.url} -s=mobile`);
+    let promise4 = exec(`node app.js -u ${argv.url} -s=mobile -l=${argv.language}`);
 
     Promise.all([
         promise1,

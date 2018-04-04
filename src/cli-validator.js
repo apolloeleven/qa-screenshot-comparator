@@ -17,6 +17,13 @@ module.exports = yargs
         describe: 'Please provide website url',
         string: true
     })
+    .option('language', {
+        alias: 'l',
+        describe: 'Please specify the language',
+        choices: ['en', 'de'],
+        demand: true,
+        string: true
+    })
     .help('h')
     .alias('help', 'h')
 ;

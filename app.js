@@ -7,6 +7,7 @@ const devices = require('puppeteer/DeviceDescriptors');
 const _cliProgress = require('cli-progress');
 const Sitemap = require('./src/sitemap-generator');
 const yargs = require('./src/cli-validator');
+const fx = require('mkdir-recursive');
 
 const argv = yargs
     .option('size', {
@@ -30,15 +31,9 @@ const RESOLUTION = SCREEN_RESOLUTIONS[argv.size];
 const progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
 
 const RUNTIME = __dirname + '/runtime';
-const IMAGE_FOLDER = RUNTIME + `/${argv.size}`;
+const IMAGE_FOLDER = RUNTIME + `/${argv.language}/${argv.size}`;
 
-if (!fs.existsSync(RUNTIME)) {
-    fs.mkdirSync(RUNTIME);
-}
-
-if (!fs.existsSync(IMAGE_FOLDER)) {
-    fs.mkdirSync(IMAGE_FOLDER);
-}
+fx.mkdirSync(IMAGE_FOLDER);
 
 let urls;
 
