@@ -10,10 +10,11 @@
   "license": "ISC",
   "dependencies": {
     "cli-progress": "^1.8.0",
-    "mkdir-recursive": "^0.4.0",
+    "fs-extra": "^5.0.0",
     "path": "^0.12.7",
     "puppeteer": "^1.2.0",
     "sitemap-generator": "^8.0.0",
+    "underscore": "^1.8.3",
     "yargs": "^11.0.0"
   }
 }

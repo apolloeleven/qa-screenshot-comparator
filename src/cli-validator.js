@@ -17,6 +17,13 @@ module.exports = yargs
         describe: 'Please provide website url',
         string: true
     })
+    .option('size', {
+        alias: 's',
+        describe: 'Choose the resolution',
+        choices: ['desktop', 'laptop', 'tablet', 'mobile'],
+        demand: false,
+        string: true
+    })
     .option('language', {
         alias: 'l',
         describe: 'Please specify the language',

@@ -4,13 +4,14 @@
 const fs = require('fs');
 const SitemapGenerator = require('sitemap-generator');
 const path = require('path');
+
 const ROOT_PATH = path.dirname(require.main.filename);
 
 const RUNTIME = ROOT_PATH + '/runtime';
 
-const URLS_FILE = RUNTIME + '/urls.json';
+module.exports.generate = (url, generateSitemap, language) => {
 
-module.exports.generate = (url, generateSitemap) => {
+    const URLS_FILE = RUNTIME + `/${language}_urls.json`;
 
     // create generator
     const generator = SitemapGenerator(url, {

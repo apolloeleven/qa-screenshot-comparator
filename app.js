@@ -1,21 +1,16 @@
 /**
  * Created by zura on 3/28/18.
  */
-const fs = require('fs');
+const fs = require('fs-extra');
 const puppeteer = require('puppeteer');
 const devices = require('puppeteer/DeviceDescriptors');
 const _cliProgress = require('cli-progress');
 const Sitemap = require('./src/sitemap-generator');
 const yargs = require('./src/cli-validator');
-const fx = require('mkdir-recursive');
 
 const argv = yargs
     .option('size', {
-        alias: 's',
-        describe: 'Choose the resolution',
-        choices: ['desktop', 'laptop', 'tablet', 'mobile'],
-        demand: true,
-        string: true
+        demand: true
     })
     .argv;
 
@@ -33,14 +28,18 @@ const progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic
 const RUNTIME = __dirname + '/runtime';
 const IMAGE_FOLDER = RUNTIME + `/${argv.language}/${argv.size}`;
 
-fx.mkdirSync(IMAGE_FOLDER);
+console.log(IMAGE_FOLDER);
+// if (fs.existsSync(IMAGE_FOLDER)){
+//     fx.rmdirSync(IMAGE_FOLDER);
+// }
+fs.emptyDirSync(IMAGE_FOLDER);
 
 let urls;
 
 let run = async () => {
 
     console.time('Everything generated');
-    urls = await Sitemap.generate(argv.url, argv.generateSitemap);
+    urls = await Sitemap.generate(argv.url, argv.generateSitemap, argv.language);
     generateScreenshots(urls).catch(err => {
         console.log(err);
     });

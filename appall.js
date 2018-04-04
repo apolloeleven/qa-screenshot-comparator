@@ -4,28 +4,41 @@
 
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
-const Sitemap = require('./src/sitemap-generator');
 const yargs = require('./src/cli-validator');
+const _ = require('underscore');
+
+const Sitemap = require('./src/sitemap-generator');
 const argv = yargs.argv;
 
-async function init() {
-    console.time("Screenshot generation");
-    let urls = await Sitemap.generate(argv.url, argv.generateSitemap);
-    console.log("Start promise1");
-    let promise1 = exec(`node app.js -u ${argv.url} -s=desktop -l=${argv.language}`);
-    console.log("Start promise2");
-    let promise2 = exec(`node app.js -u ${argv.url} -s=laptop -l=${argv.language}`);
-    console.log("Start promise3");
-    let promise3 = exec(`node app.js -u ${argv.url} -s=tablet -l=${argv.language}`);
-    console.log("Start promise4");
-    let promise4 = exec(`node app.js -u ${argv.url} -s=mobile -l=${argv.language}`);
+let sizes = argv.size;
+if (!argv.size){
+    sizes = sizes = ['desktop', 'laptop', 'mobile', 'tablet'];
+}
+sizes = _.isArray(sizes) ? sizes : [sizes];
+const startUrls = _.isArray(argv.url) ? argv.url : [argv.url];
+const languages = _.isArray(argv.language) ? argv.language : [argv.language];
 
-    Promise.all([
-        promise1,
-        promise2,
-        promise3,
-        promise4
-    ]).then(() => {
+if (startUrls.length !== languages.length) {
+    console.error(`You must provide the same number of "language" and "url"`);
+    return;
+}
+
+async function init() {
+    let promises = [];
+    console.time("Screenshot generation");
+
+    for (let i = 0; i < startUrls.length; i++) {
+        let url = startUrls[i];
+        let language = languages[i];
+        // Generate sitemap once and cache it. It will be used from cache by calling `node app.js` command
+        await Sitemap.generate(url, argv.generateSitemap, language);
+        for (let size of sizes) {
+            console.log(`Start generating screens for "${size}" from url "${url}" in folder ${language}`);
+            let promise = exec(`node app.js -u ${url} -s=${size} -l=${language}`);
+            promises.push(promise);
+        }
+    }
+    Promise.all(promises).then(() => {
         console.log("All screenshots have been successfully generated");
         console.timeEnd("Screenshot generation");
     });
