@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "cli-progress": "^1.8.0",
+    "path": "^0.12.7",
     "puppeteer": "^1.2.0",
     "sitemap-generator": "^8.0.0",
     "yargs": "^11.0.0"

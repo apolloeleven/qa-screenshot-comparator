@@ -2,26 +2,13 @@
  * Created by zura on 3/28/18.
  */
 const fs = require('fs');
-const yargs = require('yargs');
-const SitemapGenerator = require('sitemap-generator');
 const puppeteer = require('puppeteer');
 const devices = require('puppeteer/DeviceDescriptors');
 const _cliProgress = require('cli-progress');
+const Sitemap = require('./src/sitemap-generator');
+const yargs = require('./src/cli-validator');
 
 const argv = yargs
-
-    .option('generateSitemap', {
-        demand: false,
-        alias: 'sm',
-        describe: 'If you want to generate sitemap also or use previously generated',
-        boolean: true
-    })
-    .option('url', {
-        demand: true,
-        alias: 'u',
-        describe: 'Please provide website url',
-        string: true
-    })
     .option('size', {
         alias: 's',
         describe: 'Choose the resolution',
@@ -29,10 +16,7 @@ const argv = yargs
         demand: true,
         string: true
     })
-    .help('h')
-    .alias('help', 'h')
-    .argv
-;
+    .argv;
 
 const SCREEN_RESOLUTIONS = {
     desktop: {width: 1440, height: 10},
@@ -47,7 +31,6 @@ const progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic
 
 const RUNTIME = __dirname + '/runtime';
 const IMAGE_FOLDER = RUNTIME + `/${argv.size}`;
-const URLS_FILE = RUNTIME + '/urls.json';
 
 if (!fs.existsSync(RUNTIME)) {
     fs.mkdirSync(RUNTIME);
@@ -62,38 +45,9 @@ let urls;
 let run = async () => {
 
     console.time('Everything generated');
-    urls = await getUrls(argv.url);
+    urls = await Sitemap.generate(argv.url, argv.generateSitemap);
     generateScreenshots(urls).catch(err => {
         console.log(err);
-    });
-};
-
-let getUrls = async (url) => {
-
-    // create generator
-    const generator = SitemapGenerator(url, {
-            stripQuerystring: false
-        })
-    ;
-    return new Promise((resolve, reject) => {
-        let urls = [];
-        generator.on('add', (url) => {
-            // console.log(`Grabbed url ${url}`);
-            urls.push(url);
-        });
-        generator.on('done', async ($content) => {
-            console.timeEnd("Sitemap generation");
-            fs.writeFileSync(URLS_FILE, JSON.stringify(urls, undefined, 2));
-            resolve(urls);
-        });
-
-        console.time("Sitemap generation");
-        if (argv.generateSitemap || !fs.existsSync(URLS_FILE)) {
-            generator.start();
-        } else {
-            let data = fs.readFileSync(URLS_FILE, 'utf8');
-            resolve(JSON.parse(data));
-        }
     });
 };
 
@@ -175,7 +129,5 @@ let takeScreenshot = (browser, url) => {
         });
     });
 };
-
-Promise.all([])
 
 run();
