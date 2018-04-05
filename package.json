@@ -11,8 +11,10 @@
   "dependencies": {
     "cli-progress": "^1.8.0",
     "fs-extra": "^5.0.0",
+    "image-diff": "^2.0.0",
     "path": "^0.12.7",
     "pixelmatch": "^4.0.2",
+    "pngjs": "^3.3.2",
     "puppeteer": "^1.2.0",
     "sitemap-generator": "^8.0.0",
     "underscore": "^1.8.3",
