@@ -3,11 +3,9 @@
  */
 const fs = require('fs');
 const SitemapGenerator = require('sitemap-generator');
-const path = require('path');
+const conf = require('./conf');
 
-const ROOT_PATH = path.dirname(require.main.filename);
-
-const RUNTIME = ROOT_PATH + '/runtime';
+const RUNTIME = conf.RUNTIME;
 
 module.exports.generate = (url, generateSitemap, language) => {
 

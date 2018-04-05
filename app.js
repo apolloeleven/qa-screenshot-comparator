@@ -7,6 +7,7 @@ const devices = require('puppeteer/DeviceDescriptors');
 const _cliProgress = require('cli-progress');
 const Sitemap = require('./src/sitemap-generator');
 const yargs = require('./src/cli-validator');
+const conf = require('./src/conf');
 
 const argv = yargs
     .option('size', {
@@ -25,7 +26,7 @@ const RESOLUTION = SCREEN_RESOLUTIONS[argv.size];
 
 const progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
 
-const RUNTIME = __dirname + '/runtime';
+const RUNTIME = conf.RUNTIME;
 const IMAGE_FOLDER = RUNTIME + `/${argv.language}/${argv.size}`;
 
 console.log(IMAGE_FOLDER);
