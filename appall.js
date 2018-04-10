@@ -1,11 +1,12 @@
 /**
  * Created by zura on 4/4/18.
  */
-
+const fs = require('fs-extra');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const yargs = require('./src/cli-validator');
 const _ = require('underscore');
+const conf = require('./src/conf');
 
 const Sitemap = require('./src/sitemap-generator');
 const argv = yargs.argv;
@@ -22,6 +23,8 @@ if (startUrls.length !== languages.length) {
     console.error(`You must provide the same number of "language" and "url"`);
     return;
 }
+const RUNTIME = conf.RUNTIME;
+fs.ensureDirSync(RUNTIME);
 
 async function init() {
     let promises = [];
