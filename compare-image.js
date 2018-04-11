@@ -7,6 +7,8 @@ const fs = require('fs-extra'),
     path = require('path');
     pixelmatch = require('pixelmatch');
 
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
 const gm = require('gm').subClass({imageMagick: true});
 
 const ImageCompare = require('./src/image-comparator');
@@ -14,16 +16,18 @@ const ImageCompare = require('./src/image-comparator');
 module.exports.isTheSame = isTheSame;
 
 function isTheSame(expectedImage, originalImage, outputPath) {
+    return exec(`php index-single.php ${expectedImage} ${originalImage} ${outputPath}`);
     return new Promise(async (resolve, reject) => {
 
-        let imageComparator1 = new ImageCompare(expectedImage, outputPath);
-        let imageComparator2 = new ImageCompare(originalImage, outputPath);
+
+        let stable = new ImageCompare(originalImage, outputPath);
+        let current = new ImageCompare(originalImage, outputPath);
         let counter = 0;
-        imageComparator1.onReady = () => {
+        stable.onReady = () => {
             counter++;
             compare();
         };
-        imageComparator2.onReady = () => {
+        current.onReady = () => {
             counter++;
             compare();
         };
@@ -31,7 +35,7 @@ function isTheSame(expectedImage, originalImage, outputPath) {
 
         function compare(){
             if (counter > 1){
-                imageComparator1.compare(imageComparator2);
+                stable.compare(current);
             }
         }
     });
@@ -49,7 +53,15 @@ function isTheSame(expectedImage, originalImage, outputPath) {
 //       if (!err) console.log('done');
 //     })
 // ;
-isTheSame('2_s.png','2_n.png','./');
+// isTheSame('/home/zura/NODE/sitemap-generator/runtime_old/stable/de/desktop/career-de-car1411-intermundia-de-de-aktuelles-termine.png',
+//     '/home/zura/NODE/sitemap-generator/runtime_old/current/de/desktop/career-de-car1411-intermundia-de-de-aktuelles-termine.png', './')
+//     .then((result) => {
+//         console.log(result);
+//     });
+// isTheSame('2_n.png','2_s.png', './')
+//     .then((result) => {
+//         console.log(result);
+//     });
 
 
 // isTheSame('/var/www/html/image-compare/stable/de/desktop/career-de-car1411-intermundia-de-de-kontakt-kontakt.png',

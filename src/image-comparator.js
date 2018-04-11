@@ -10,7 +10,7 @@ const conf = require('./conf');
 
 function ImageCompare(imagePath, outputPath) {
 
-    this.LINE_THICKNESS = 2;
+    this.LINE_THICKNESS = 1;
 
     this.constructor(imagePath, outputPath);
 }
@@ -31,14 +31,14 @@ ImageCompare.prototype = {
         let myPixels = pixels.data;
 
         let k = 0;
-        for (let i = 0; i < WIDTH; i++) {
+        for (let j = 0; j < HEIGHT; j++) {
             let row = [];
-            for (let j = 0; j < HEIGHT; j++) {
-                let pixel = this.getPixelColor(myPixels[k], myPixels[k + 1], myPixels[k + 2], (DEPTH === 4 ? myPixels[k + 3] : null));
-                row.push(pixel);
+            for (let i = 0; i < WIDTH; i++) {
+                let pixelColor = this.getPixelColor(myPixels[k], myPixels[k + 1], myPixels[k + 2], (DEPTH === 4 ? myPixels[k + 3] : null));
+                row[i] = pixelColor;
                 k += DEPTH;
             }
-            this.pixels[i] = row;
+            this.pixels[j] = row;
         }
 
         // console.log(this);
@@ -52,19 +52,12 @@ ImageCompare.prototype = {
 
     getPixelColor: function (r, g, b, a) {
         const shiftBy = a ? 4 : 3;
-        return r << 8 * (shiftBy - 1)
-            + g << 8 * (shiftBy - 2)
-            + b << 8 * (shiftBy - 3)
-            + a << 8 * (shiftBy - 4)
+        const color = (r << 8 * (shiftBy - 1))
+            + (g << 8 * (shiftBy - 2))
+            + (b << 8 * (shiftBy - 3))
+            + (a << 8 * (shiftBy - 4))
         ;
-    },
-
-    getLineAsString: function (y) {
-        const pixels = [];
-        for (let x = 0; x < this.WIDTH; x++) {
-            pixels.push(this.pixels[x][y]);
-        }
-        return pixels.join("_");
+        return `${r}$${g}$${b}$${a}`;
     },
 
     getImageData: (imagePath) => {
@@ -78,6 +71,7 @@ ImageCompare.prototype = {
                 const HEIGHT = pixels.shape[1];
                 const DEPTH = pixels.shape[2];
 
+                // console.log("read111111111111111 ", pixels.data);
                 resolve({WIDTH, HEIGHT, DEPTH, pixels});
             });
         });
@@ -87,16 +81,16 @@ ImageCompare.prototype = {
      *
      *
      * @author Zura Sekhniashvili <zurasekhniashvili@gmail.com>
-     * @param ImageCompare $image
      * @return bool
      * @throws Exception
+     * @param {ImageCompare} current
      */
-    compare: function ($image) {
+    compare: function (current) {
         let $similarPixels = 0;
         const $thisWidth = this.WIDTH;
-        const $thisHeight = this.HEIGHT;
-        const $anotherWidth = $image.WIDTH;
-        const $anotherHeight = $image.HEIGHT;
+        const stableHeight = this.HEIGHT;
+        const $anotherWidth = current.WIDTH;
+        const currentHeight = current.HEIGHT;
 
         if ($thisWidth !== $anotherWidth) {
             throw new Error("Images have different widths");
@@ -105,38 +99,40 @@ ImageCompare.prototype = {
         let ext = path.extname(this.imagePath);
         const newFilePrefix = `${this.outputPath}/${path.basename(this.imagePath, ext)}`;
         let $stableFile = `${newFilePrefix}_stable${ext}`;
-        let $newFile = `${newFilePrefix}_new${ext}`;
+        let $newFile = `${newFilePrefix}_current${ext}`;
 
-        let $secondImageMap = {};
-        for (let y = 0; y < $anotherHeight; y++) {
-            const $string = $image.getLineAsString(y);
-            if (!$secondImageMap[$string]) {
-                $secondImageMap[$string] = [];
+        let currentImageMap = {};
+        for (let y = 0; y < currentHeight; y++) {
+            const line = current.pixels[y].join('_');
+            if (!currentImageMap[line]) {
+                currentImageMap[line] = [];
             }
-            $secondImageMap[$string].push(y);
+            currentImageMap[line].push(y);
         }
+
+        // console.log(JSON.stringify(currentImageMap, undefined, 2));
 
         const $changedAreas = [];
         let $numberOfLatestSimilarLines = 0;
         let $lastLineOfSimilarity = -1;
-        for (let y = 0; y < $thisHeight; y++) {
-            const $thisLine = this.getLineAsString(y);
-            if ($secondImageMap[$thisLine]) {
+        for (let y = 0; y < stableHeight; y++) {
+            const stableLine = this.pixels[y].join('_');
+            if (currentImageMap[stableLine]) {
                 $numberOfLatestSimilarLines++;
                 let $offset = 0;
-                let $secondImageY = $secondImageMap[$thisLine][$offset];
+                let $secondImageY = currentImageMap[stableLine][$offset];
                 if ($numberOfLatestSimilarLines >= 100) {
-                    while ($offset < $secondImageMap[$thisLine].length && $secondImageMap[$thisLine][$offset] < $lastLineOfSimilarity) {
-                        $secondImageMap[$thisLine].splice($offset, 1);
+                    while ($offset < currentImageMap[stableLine].length && currentImageMap[stableLine][$offset] < $lastLineOfSimilarity) {
+                        currentImageMap[stableLine].splice($offset, 1);
                     }
                     $lastLineOfSimilarity = $secondImageY;
                 }
-                if ($secondImageMap[$thisLine][$offset]) {
-                    $changedAreas[y] = $secondImageMap[$thisLine][$offset];
-                    $secondImageMap[$thisLine].splice($offset, 1);
+                if (currentImageMap[stableLine][$offset]) {
+                    $changedAreas[y] = currentImageMap[stableLine][$offset];
+                    currentImageMap[stableLine].splice($offset, 1);
                 }
-                if (!$secondImageMap[$thisLine].length) {
-                    delete $secondImageMap[$thisLine];
+                if (!currentImageMap[stableLine].length) {
+                    delete currentImageMap[stableLine];
                 }
             } else {
                 $numberOfLatestSimilarLines = 0;
@@ -144,16 +140,18 @@ ImageCompare.prototype = {
             }
         }
 
+        // console.log(currentImageMap);
+        // return;
         // $font = __DIR__.'/Roboto-Regular.ttf';
         // let $red = imagecolorallocate($resource, 255, 0, 0);
 
         let $isTheSame = true;
         // imagesetthickness($resource, this.LINE_THICKNESS);
 //        var_dump(array_values($secondImageMap));
-        if (Object.keys($secondImageMap).length) {
+        if (Object.keys(currentImageMap).length) {
 
             let $drawPositions = [];
-            const $additions = [].concat.apply([], Object.values($secondImageMap));
+            const $additions = [].concat.apply([], Object.values(currentImageMap));
 
             let $startY = $additions[0];
             for (let $i = 1; $i < $additions.length; $i++) {
@@ -178,7 +176,7 @@ ImageCompare.prototype = {
 
             if ($drawPositions.length) {
                 $isTheSame = false;
-                fs.copySync($image.imagePath, $newFile);
+                fs.copySync(current.imagePath, $newFile);
                 // imagepng($resource, $newFile);
             }
             // console.log($drawPositions, $anotherWidth);
@@ -232,8 +230,8 @@ ImageCompare.prototype = {
             fs.copySync(this.imagePath, $stableFile);
         }
         // imagesetthickness(this.resource, self::LINE_THICKNESS);
-        for(let $drawPosition of $drawPositions){
-            drawRectangle($stableFile, 10, $drawPosition['startY'], $anotherWidth - 10, $drawPosition['endY'], '#FF0000', this.LINE_THICKNESS);
+        for (let $drawPosition of $drawPositions) {
+            // drawRectangle($stableFile, 10, $drawPosition['startY'], $anotherWidth - 10, $drawPosition['endY'], '#FF0000', this.LINE_THICKNESS);
             // imagerectangle(this.resource, 10, $drawPosition['startY'], $thisWidth - 10, $drawPosition['endY'], $red);
             // imagettftext(this.resource, 20, 0, 10, $drawPosition['startY'] - 5, $red, $font, $i + 1);
         }
@@ -242,7 +240,7 @@ ImageCompare.prototype = {
 //            var_dump($drawPositions);
 //        }
 
-        console.log("Comparison finished. Images are "+($isTheSame ? 'the same' : 'different'));
+        console.log("Comparison finished. Images are " + ($isTheSame ? 'the same' : 'different'));
 
 // //        $firstX = 0;
 // //        $secondX = 0;
