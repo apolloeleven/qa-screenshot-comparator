@@ -7,24 +7,51 @@ const fs = require('fs-extra'),
     path = require('path');
     pixelmatch = require('pixelmatch');
 
+const gm = require('gm').subClass({imageMagick: true});
+
 const ImageCompare = require('./src/image-comparator');
 
 module.exports.isTheSame = isTheSame;
 
-function isTheSame(expectedImage, originalImage, outputImage) {
-    return new Promise((resolve, reject) => {
+function isTheSame(expectedImage, originalImage, outputPath) {
+    return new Promise(async (resolve, reject) => {
 
-        let imageComparator = new ImageCompare(expectedImage, originalImage);
-        // imageComparator.compare();
+        let imageComparator1 = new ImageCompare(expectedImage, outputPath);
+        let imageComparator2 = new ImageCompare(originalImage, outputPath);
+        let counter = 0;
+        imageComparator1.onReady = () => {
+            counter++;
+            compare();
+        };
+        imageComparator2.onReady = () => {
+            counter++;
+            compare();
+        };
 
+
+        function compare(){
+            if (counter > 1){
+                imageComparator1.compare(imageComparator2);
+            }
+        }
     });
 }
 
+// gm('2_s.png')
+//     .stroke('#FF0000', 2)
+//     .fill('transparent')
+//     .drawRectangle(100, 150, 200, 300)
 //
-isTheSame('5hueFdG.png',
-    '/var/www/html/image-compare/20180330/de/desktop/career-de-car1411-intermundia-de.png',
-    'career-de-car1411-intermundia-de.png');
 //
+//     // .resize(240, 240)
+//     // .noProfile()
+//     .write('2_o.png', function (err) {
+//       if (!err) console.log('done');
+//     })
+// ;
+isTheSame('2_s.png','2_n.png','./');
+
+
 // isTheSame('/var/www/html/image-compare/stable/de/desktop/career-de-car1411-intermundia-de-de-kontakt-kontakt.png',
 //     '/var/www/html/image-compare/20180330/de/desktop/career-de-car1411-intermundia-de-de-kontakt-kontakt.png',
 //     'difference.png');

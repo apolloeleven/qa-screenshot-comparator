@@ -1,45 +1,32 @@
 /**
  * Created by zura on 4/5/18.
  */
+const fs = require('fs-extra');
 const path = require('path');
 const getPixels = require("get-pixels");
+const Jimp = require("jimp");
+const gm = require('gm').subClass({imageMagick: true});
 const conf = require('./conf');
-
-function Pixel(r, g, b, a) {
-    const shiftBy = a ? 4 : 3;
-    this.red = r;
-    this.green = g;
-    this.blue = b;
-    this.alpha = a;
-    this.colorRat = this.getColorRat();
-
-    this.getColorRat = () => {
-        return r << 8 * (shiftBy - 1)
-            + g << 8 * (shiftBy - 2)
-            + b << 8 * (shiftBy - 3)
-            + a << 8 * (shiftBy - 4)
-    };
-}
 
 function ImageCompare(imagePath, outputPath) {
 
-    const LINE_THICKNESS = 2;
+    this.LINE_THICKNESS = 2;
 
     this.constructor(imagePath, outputPath);
-    console.log("");
 }
 
 ImageCompare.prototype = {
     constructor: async function ($imagePath, $outputPath) {
         this.imagePath = $imagePath;
         this.outputPath = $outputPath;
+        this.onReady = () => {
+        };
         // this.resource = imagecreatefrompng($imagePath);
         // this.width = imagesx(this.resource);
         // this.height = imagesy(this.resource);
 
 
         const {WIDTH, HEIGHT, DEPTH, pixels} = await this.getImageData($imagePath);
-
         this.pixels = [];
         let myPixels = pixels.data;
 
@@ -47,23 +34,35 @@ ImageCompare.prototype = {
         for (let i = 0; i < WIDTH; i++) {
             let row = [];
             for (let j = 0; j < HEIGHT; j++) {
-                let pixel = new Pixel(myPixels[k], myPixels[k + 1], myPixels[k + 2], (DEPTH === 4 ? myPixels[k + 3] : null));
+                let pixel = this.getPixelColor(myPixels[k], myPixels[k + 1], myPixels[k + 2], (DEPTH === 4 ? myPixels[k + 3] : null));
                 row.push(pixel);
                 k += DEPTH;
             }
             this.pixels[i] = row;
         }
 
-        console.log(this.pixels);
+        // console.log(this);
 
         this.WIDTH = WIDTH;
         this.HEIGHT = HEIGHT;
+        if (this.onReady && typeof this.onReady === 'function') {
+            this.onReady(WIDTH, HEIGHT, DEPTH, pixels);
+        }
+    },
+
+    getPixelColor: function (r, g, b, a) {
+        const shiftBy = a ? 4 : 3;
+        return r << 8 * (shiftBy - 1)
+            + g << 8 * (shiftBy - 2)
+            + b << 8 * (shiftBy - 3)
+            + a << 8 * (shiftBy - 4)
+        ;
     },
 
     getLineAsString: function (y) {
         const pixels = [];
         for (let x = 0; x < this.WIDTH; x++) {
-            pixels.push(this.pixels[x][y].colorRat);
+            pixels.push(this.pixels[x][y]);
         }
         return pixels.join("_");
     },
@@ -93,7 +92,7 @@ ImageCompare.prototype = {
      * @throws Exception
      */
     compare: function ($image) {
-        $similarPixels = 0;
+        let $similarPixels = 0;
         const $thisWidth = this.WIDTH;
         const $thisHeight = this.HEIGHT;
         const $anotherWidth = $image.WIDTH;
@@ -104,7 +103,7 @@ ImageCompare.prototype = {
         }
 
         let ext = path.extname(this.imagePath);
-        const newFilePrefix = ${this.outputPath}/${path.basename(this.imagePath, ext)};
+        const newFilePrefix = `${this.outputPath}/${path.basename(this.imagePath, ext)}`;
         let $stableFile = `${newFilePrefix}_stable${ext}`;
         let $newFile = `${newFilePrefix}_new${ext}`;
 
@@ -146,12 +145,12 @@ ImageCompare.prototype = {
         }
 
         // $font = __DIR__.'/Roboto-Regular.ttf';
-        let $red = imagecolorallocate($resource, 255, 0, 0);
+        // let $red = imagecolorallocate($resource, 255, 0, 0);
 
         let $isTheSame = true;
-        imagesetthickness($resource, this.LINE_THICKNESS);
+        // imagesetthickness($resource, this.LINE_THICKNESS);
 //        var_dump(array_values($secondImageMap));
-        if ($secondImageMap.length) {
+        if (Object.keys($secondImageMap).length) {
 
             let $drawPositions = [];
             const $additions = [].concat.apply([], Object.values($secondImageMap));
@@ -170,23 +169,24 @@ ImageCompare.prototype = {
             let $endY = $additions[$additions.length - 1];
             $drawPositions.push({
                 'startY': $startY,
-                'endY':$endY
-            })
-            ;
+                'endY': $endY
+            });
 
             $drawPositions.sort(function ($position1, $position2) {
                 return $position1['startY'] - $position2['startY'];
             });
 
-//            var_dump($drawPositions);
-            for (let $drawPosition of $drawPositions)
-            {
-                // imagerectangle($resource, 10, $drawPosition['startY'], $anotherWidth - 10, $drawPosition['endY'], $red);
-                // imagettftext($resource, 20, 0, 10, $drawPosition['startY'] - 5, $red, $font, $i + 1);
-            }
             if ($drawPositions.length) {
                 $isTheSame = false;
+                fs.copySync($image.imagePath, $newFile);
                 // imagepng($resource, $newFile);
+            }
+            // console.log($drawPositions, $anotherWidth);
+            for (let $drawPosition of $drawPositions) {
+                drawRectangle($newFile, 10, $drawPosition['startY'], $anotherWidth - 10, $drawPosition['endY'], '#FF0000', this.LINE_THICKNESS);
+                // gm($stableFile).drawRectangle(10, $drawPosition['startY'], $anotherWidth - 10, $drawPosition['endY']);
+                // imagerectangle($resource, 10, $drawPosition['startY'], $anotherWidth - 10, $drawPosition['endY'], $red);
+                // imagettftext($resource, 20, 0, 10, $drawPosition['startY'] - 5, $red, $font, $i + 1);
             }
         }
 //        $changedAreas = array_filter($changedAreas, function ($position) {
@@ -195,8 +195,7 @@ ImageCompare.prototype = {
 
 
         let $additions = [];
-        for(let $y in $changedAreas)
-        {
+        for (let $y in $changedAreas) {
             let $position = $changedAreas[$y];
             if ($position === -1) {
                 $additions.push($y);
@@ -208,7 +207,7 @@ ImageCompare.prototype = {
             let $startY = $additions[0];
             for (let $i = 1; $i < $additions.length; $i++) {
                 if ($additions[$i] - 20 > $additions[$i - 1]) {
-                    $endY = $additions[$i - 1];
+                    const $endY = $additions[$i - 1];
                     $drawPositions.push({
                         'startY': $startY,
                         'endY': $endY
@@ -227,22 +226,23 @@ ImageCompare.prototype = {
             });
         }
 
+
+        if ($drawPositions.length) {
+            $isTheSame = false;
+            fs.copySync(this.imagePath, $stableFile);
+        }
         // imagesetthickness(this.resource, self::LINE_THICKNESS);
-        // for(let $i in $drawPositions){
-        //     let $drawPosition = $drawPositions[$i];
-        //     imagerectangle(this.resource, 10, $drawPosition['startY'], $thisWidth - 10, $drawPosition['endY'], $red);
-        //     imagettftext(this.resource, 20, 0, 10, $drawPosition['startY'] - 5, $red, $font, $i + 1);
-        // }
-        // if ($drawPositions.length) {
-        //     $isTheSame = false;
-        //     imagepng(this.resource, $stableFile);
-        // }
+        for(let $drawPosition of $drawPositions){
+            drawRectangle($stableFile, 10, $drawPosition['startY'], $anotherWidth - 10, $drawPosition['endY'], '#FF0000', this.LINE_THICKNESS);
+            // imagerectangle(this.resource, 10, $drawPosition['startY'], $thisWidth - 10, $drawPosition['endY'], $red);
+            // imagettftext(this.resource, 20, 0, 10, $drawPosition['startY'] - 5, $red, $font, $i + 1);
+        }
 
 //        if (!empty($drawPositions)){
 //            var_dump($drawPositions);
 //        }
 
-        // $logger->log("Comparison finished. Images are ".($isTheSame ? 'the same' : 'different'));
+        console.log("Comparison finished. Images are "+($isTheSame ? 'the same' : 'different'));
 
 // //        $firstX = 0;
 // //        $secondX = 0;
@@ -264,39 +264,38 @@ ImageCompare.prototype = {
 // //
 // //        this.message = "Images are similar with " . ($similarPixels / ($thisHeight * $thisWidth) * 100) . '%';
 // //        return false;
-        }
-    ,
+    },
 
-        /**
-         * Detect how similar are two lines
-         *
-         * @author Zura Sekhniashvili <zurasekhniashvili@gmail.com>
-         * @param ImageCompare $image
-         * @param $firstX
-         * @param $secondX
-         * @return float|int
-         */
-        // compareHorizontalLines: function ($image, $firstX, $secondX) {
-        //     $thisHeight = imagesy(this.resource);
-        //     $similarPixels = 0;
-        //     for ($y = 0; $y < $thisHeight; $y++) {
-        //         if (imagecolorat(this.resource, $firstX, $y) === imagecolorat($image->getResource(), $secondX, $y)) {
-        //             $similarPixels++;
-        //         }
-        //     }
-        //
-        //     return $similarPixels / $thisHeight * 100;
-        // },
+    /**
+     * Detect how similar are two lines
+     *
+     * @author Zura Sekhniashvili <zurasekhniashvili@gmail.com>
+     * @param ImageCompare $image
+     * @param $firstX
+     * @param $secondX
+     * @return float|int
+     */
+    // compareHorizontalLines: function ($image, $firstX, $secondX) {
+    //     $thisHeight = imagesy(this.resource);
+    //     $similarPixels = 0;
+    //     for ($y = 0; $y < $thisHeight; $y++) {
+    //         if (imagecolorat(this.resource, $firstX, $y) === imagecolorat($image->getResource(), $secondX, $y)) {
+    //             $similarPixels++;
+    //         }
+    //     }
+    //
+    //     return $similarPixels / $thisHeight * 100;
+    // },
 
-        // getLineAsString: function ($y) {
-        //     $resource = this.resource;
-        //     $thisWidth = imagesx($resource);
-        //     let $pixels = [];
-        //     for ($x = 0; $x < $thisWidth; $x++) {
-        //         $pixels[] = imagecolorat($resource, $x, $y);
-        //     }
-        //     return $pixels.join("_");
-        // },
+    // getLineAsString: function ($y) {
+    //     $resource = this.resource;
+    //     $thisWidth = imagesx($resource);
+    //     let $pixels = [];
+    //     for ($x = 0; $x < $thisWidth; $x++) {
+    //         $pixels[] = imagecolorat($resource, $x, $y);
+    //     }
+    //     return $pixels.join("_");
+    // },
 
 //     comparePixel: function ($image, $x, $y) {
 // //        var_dump(imagecolorat(this.resource, $x, $y));
@@ -308,16 +307,33 @@ ImageCompare.prototype = {
 //         $b = $rgb & 0xFF;
 //     },
 
-        // getResource: function () {
-        //     return this.resource;
-        // },
+    // getResource: function () {
+    //     return this.resource;
+    // },
 
-        // getMessage: function () {
-        //     return this.message;
-        // }
-    }
+    // getMessage: function () {
+    //     return this.message;
+    // }
+}
 
-    module.exports = ImageCompare;
+module.exports = ImageCompare;
 
-let image = `/home/zura/NODE/sitemap-generator/runtime/de/desktop/career-de-car1411-intermundia-de.png`;
-console.log(image);
+// let image = `/home/zura/NODE/sitemap-generator/runtime/de/desktop/career-de-car1411-intermundia-de.png`;
+// console.log(image);
+
+function drawRectangle(file, x0, y0, x1, y1, color, width) {
+
+    gm(file)
+        .stroke(color, width)
+        .fill('transparent')
+        .drawRectangle(x0, y0, x1, y1)
+
+
+        // .resize(240, 240)
+        // .noProfile()
+        .write(file, function (err) {
+            if (err) console.log(err);
+        })
+    ;
+}
+
