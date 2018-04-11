@@ -22,10 +22,7 @@ module.exports.generate = (url, generateSitemap, language) => {
 
     let urls = [];
     let frame = '';
-    let interval = setInterval(() => {
-        frame = frames[i = ++i % frames.length];
-        logUpdate(`♥♥ ${frame} Found ${urls.length} urls ${frame} ♥♥`);
-    }, 80);
+    let interval;
 
     return new Promise((resolve, reject) => {
 
@@ -42,9 +39,13 @@ module.exports.generate = (url, generateSitemap, language) => {
             resolve(urls);
         });
 
-        console.time("Sitemap generation");
         if (generateSitemap || !fs.existsSync(URLS_FILE)) {
+            console.time("Sitemap generation");
             generator.start();
+            interval = setInterval(() => {
+                frame = frames[i = ++i % frames.length];
+                logUpdate(`♥♥ ${frame} Found ${urls.length} urls ${frame} ♥♥`);
+            }, 80);
         } else {
             let data = fs.readFileSync(URLS_FILE, 'utf8');
             resolve(JSON.parse(data));

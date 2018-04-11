@@ -119,7 +119,7 @@ let takeScreenshot = (browser, url) => {
                     `${IMAGE_FOLDER}/${imageName}.png`,
                     path.dirname(`${IMAGE_FOLDER}/${imageName}.png`.replace('/current/', '/output/')))
                     .then((result) => {
-                        console.log(result);
+                        console.log(result.stdout);
                     });
                 resolve(page);
             })
