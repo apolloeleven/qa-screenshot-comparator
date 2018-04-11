@@ -3,7 +3,11 @@
  */
 const fs = require('fs');
 const SitemapGenerator = require('sitemap-generator');
+const logUpdate = require('log-update');
 const conf = require('./conf');
+
+const frames = ['-', '\\', '|', '/'];
+let i = 0;
 
 const RUNTIME = conf.RUNTIME;
 
@@ -16,13 +20,23 @@ module.exports.generate = (url, generateSitemap, language) => {
         stripQuerystring: false
     });
 
+    let urls = [];
+    let frame = '';
+    let interval = setInterval(() => {
+        frame = frames[i = ++i % frames.length];
+        logUpdate(`♥♥ ${frame} Found ${urls.length} urls ${frame} ♥♥`);
+    }, 80);
+
     return new Promise((resolve, reject) => {
-        let urls = [];
+
         generator.on('add', (url) => {
             // console.log(`Grabbed url ${url}`);
             urls.push(url);
+            logUpdate(`♥♥ ${frame} Found ${urls.length} urls ${frame} ♥♥`);
         });
         generator.on('done', async ($content) => {
+            clearInterval(interval);
+            logUpdate.done();
             console.timeEnd("Sitemap generation");
             fs.writeFileSync(URLS_FILE, JSON.stringify(urls, undefined, 2));
             resolve(urls);

@@ -8,7 +8,8 @@ const _cliProgress = require('cli-progress');
 const Sitemap = require('./src/sitemap-generator');
 const yargs = require('./src/cli-validator');
 const conf = require('./src/conf');
-// const compareImage = require('./compare-image');
+const compareImage = require('./compare-image');
+const path = require('path');
 
 const argv = yargs
     .option('size', {
@@ -114,9 +115,12 @@ let takeScreenshot = (browser, url) => {
             progressBar.update(urls.indexOf(url));
             return new Promise(async (resolve, reject) => {
                 await page.screenshot({path: `${IMAGE_FOLDER}/${imageName}.png`, fullPage: true});
-                // await compareImage.isTheSame(`${IMAGE_FOLDER}/${imageName}.png`.replace('/current/', '/stable/'),
-                //     `${IMAGE_FOLDER}/${imageName}.png`,
-                //     `${IMAGE_FOLDER}/${imageName}.png`.replace('/current/', '/output/'));
+                await compareImage.isTheSame(`${IMAGE_FOLDER}/${imageName}.png`.replace('/current/', '/stable/'),
+                    `${IMAGE_FOLDER}/${imageName}.png`,
+                    path.dirname(`${IMAGE_FOLDER}/${imageName}.png`.replace('/current/', '/output/')))
+                    .then((result) => {
+                        console.log(result);
+                    });
                 resolve(page);
             })
         }).then((page) => {
