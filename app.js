@@ -89,6 +89,10 @@ let screenshotsFor = (browser, urls, startIndex, limit) => {
                     resolve();
                 });
             }
+        }, () => {
+            screenshotsFor(browser, urls, startIndex + limit, limit).then(() => {
+                resolve();
+            });
         });
     })
 
@@ -97,7 +101,7 @@ let screenshotsFor = (browser, urls, startIndex, limit) => {
 let takeScreenshot = (browser, url) => {
     return new Promise((resolve, reject) => {
         // console.log(`Start generating ${url}`);
-        const imageName = url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
+        const imageName = url.replace(/^\/|\/$/g, '').replace(/^https?:\/\/[^\/]+\//, '').replace(/[\.\/]+/g, '-') || 'home';
         browser.newPage().then((page) => {
             // console.log(`Set viewport `);
             return new Promise(async (resolve, reject) => {
@@ -107,8 +111,13 @@ let takeScreenshot = (browser, url) => {
         }).then((page) => {
             // console.log(`Go to page`);
             return new Promise(async (resolve, reject) => {
-                await page.goto(url);
-                resolve(page);
+                try {
+                    await page.goto(url);
+                    resolve(page);
+                }catch(e){
+                    console.error(`${e.message} for url ${url}`);
+                    reject();
+                }
             });
         }).then((page) => {
             // console.log(`Screenshot for ${url}`);

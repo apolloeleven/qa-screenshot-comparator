@@ -17,7 +17,7 @@ module.exports.generate = (url, generateSitemap) => {
 
     // create generator
     const generator = SitemapGenerator(url, {
-        stripQuerystring: false
+        stripQuerystring: true
     });
 
     let urls = [];
@@ -27,9 +27,9 @@ module.exports.generate = (url, generateSitemap) => {
     return new Promise((resolve, reject) => {
 
         generator.on('add', (url) => {
-            // console.log(`Grabbed url ${url}`);
+            console.log(`Grabbed url ${url}`);
             urls.push(url);
-            logUpdate(`♥♥ ${frame} Found ${urls.length} urls ${frame} ♥♥`);
+            // logUpdate(`☕☕ ${frame} Found ${urls.length} urls ${frame} ☕☕`);
         });
         generator.on('done', async ($content) => {
             clearInterval(interval);
@@ -42,10 +42,10 @@ module.exports.generate = (url, generateSitemap) => {
         if (generateSitemap || !fs.existsSync(URLS_FILE)) {
             console.time("Sitemap generation");
             generator.start();
-            interval = setInterval(() => {
-                frame = frames[i = ++i % frames.length];
-                logUpdate(`♥♥ ${frame} Found ${urls.length} urls ${frame} ♥♥`);
-            }, 80);
+            // interval = setInterval(() => {
+            //     frame = frames[i = ++i % frames.length];
+            //     logUpdate(`☕☕ ${frame} Found ${urls.length} urls ${frame} ☕☕`);
+            // }, 80);
         } else {
             let data = fs.readFileSync(URLS_FILE, 'utf8');
             resolve(JSON.parse(data));
