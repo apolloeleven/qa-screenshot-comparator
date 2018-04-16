@@ -24,13 +24,6 @@ module.exports = yargs
         demand: false,
         string: true
     })
-    .option('language', {
-        alias: 'l',
-        describe: 'Please specify the language',
-        choices: ['en', 'de'],
-        demand: true,
-        string: true
-    })
     .help('h')
     .alias('help', 'h')
 ;

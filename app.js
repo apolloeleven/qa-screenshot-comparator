@@ -29,7 +29,7 @@ const RESOLUTION = SCREEN_RESOLUTIONS[argv.size];
 const progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
 
 const RUNTIME = conf.RUNTIME;
-const IMAGE_FOLDER = RUNTIME + `/current/${argv.language}/${argv.size}`;
+const IMAGE_FOLDER = RUNTIME + `/current/${argv.size}`;
 
 console.log(IMAGE_FOLDER);
 // if (fs.existsSync(IMAGE_FOLDER)){
@@ -43,7 +43,7 @@ let urls;
 let run = async () => {
 
     console.time('Everything generated');
-    urls = await Sitemap.generate(argv.url, argv.generateSitemap, argv.language);
+    urls = await Sitemap.generate(argv.url, argv.generateSitemap);
     generateScreenshots(urls).catch(err => {
         console.log(err);
     });

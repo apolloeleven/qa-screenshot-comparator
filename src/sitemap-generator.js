@@ -11,9 +11,9 @@ let i = 0;
 
 const RUNTIME = conf.RUNTIME;
 
-module.exports.generate = (url, generateSitemap, language) => {
+module.exports.generate = (url, generateSitemap) => {
 
-    const URLS_FILE = RUNTIME + `/${language}_urls.json`;
+    const URLS_FILE = `${RUNTIME}/urls.json`;
 
     // create generator
     const generator = SitemapGenerator(url, {
