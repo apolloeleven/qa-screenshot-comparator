@@ -104,8 +104,14 @@ let takeScreenshot = (browser, url) => {
     return new Promise((resolve, reject) => {
         // console.log(`Start generating ${url}`);
         url = decodeURI(url);
+        if (/\.(html|php)$/.test(url)){
+
+        } else if (/(\.\w+)$/.test(url)){
+            resolve();
+            return;
+        }
         const imageName = url.replace(/^\/|\/$/g, '').replace(/\\"&/g, '').replace(/^https?:\/\/[^\/]+\//, '').replace(/[\.\/]+/g, '-') || 'home';
-        console.log(`URL: "${url}" - Name: ${imageName}`);
+        // console.log(`URL: "${url}" - Name: ${imageName}`);
         browser.newPage().then((page) => {
             // console.log(`Set viewport `);
             return new Promise(async (resolve, reject) => {
@@ -119,7 +125,7 @@ let takeScreenshot = (browser, url) => {
                     if (conf.HTTP_BASIC_AUTH) {
                         await page.authenticate({username: conf.HTTP_BASIC_AUTH_USERNAME, password: conf.HTTP_BASIC_AUTH_PASSWORD});
                     }
-                    await page.goto(url, {timeout: 10000});
+                    await page.goto(url, {timeout: 30000});
                     resolve(page);
                 }catch(e){
                     console.error(`${e.message} for url ${url}`);
