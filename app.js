@@ -3,18 +3,20 @@
  */
 const fs = require('fs-extra');
 const puppeteer = require('puppeteer');
-const devices = require('puppeteer/DeviceDescriptors');
+const path = require('path');
 const _cliProgress = require('cli-progress');
 const Sitemap = require('./src/sitemap-generator');
-const yargs = require('./src/cli-validator');
+const yargs = require('yargs');
+
+const yargsConfig = require('./src/yargs-config');
 const conf = require('./src/conf');
 const compareImage = require('./compare-image');
-const path = require('path');
 
+yargsConfig.size.demand = true;
 const argv = yargs
-    .option('size', {
-        demand: true
-    })
+    .options(yargsConfig)
+    .help('h')
+    .alias('help', 'h')
     .argv;
 
 const SCREEN_RESOLUTIONS = {
@@ -112,7 +114,10 @@ let takeScreenshot = (browser, url) => {
             // console.log(`Go to page`);
             return new Promise(async (resolve, reject) => {
                 try {
-                    await page.goto(url);
+                    if (conf.HTTP_BASIC_AUTH) {
+                        await page.authenticate({username: conf.HTTP_BASIC_AUTH_USERNAME, password: conf.HTTP_BASIC_AUTH_PASSWORD});
+                    }
+                    await page.goto(url, {timeout: 10000});
                     resolve(page);
                 }catch(e){
                     console.error(`${e.message} for url ${url}`);

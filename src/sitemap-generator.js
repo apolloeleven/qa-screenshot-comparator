@@ -17,7 +17,10 @@ module.exports.generate = (url, generateSitemap) => {
 
     // create generator
     const generator = SitemapGenerator(url, {
-        stripQuerystring: true
+        stripQuerystring: true,
+        needsAuth: conf.HTTP_BASIC_AUTH,
+        authUser: conf.HTTP_BASIC_AUTH_USERNAME,
+        authPass: conf.HTTP_BASIC_AUTH_PASSWORD
     });
 
     let urls = [];

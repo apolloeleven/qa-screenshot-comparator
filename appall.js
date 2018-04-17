@@ -4,12 +4,17 @@
 const fs = require('fs-extra');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
-const yargs = require('./src/cli-validator');
+const yargsConfig = require('./src/yargs-config');
+const yargs = require('yargs');
 const _ = require('underscore');
 const conf = require('./src/conf');
-
 const Sitemap = require('./src/sitemap-generator');
-const argv = yargs.argv;
+
+const argv = yargs
+    .options(yargsConfig)
+    .help('h')
+    .alias('help', 'h')
+    .argv;
 
 let sizes = argv.size;
 if (!argv.size){
