@@ -103,7 +103,9 @@ let screenshotsFor = (browser, urls, startIndex, limit) => {
 let takeScreenshot = (browser, url) => {
     return new Promise((resolve, reject) => {
         // console.log(`Start generating ${url}`);
-        const imageName = url.replace(/^\/|\/$/g, '').replace(/^https?:\/\/[^\/]+\//, '').replace(/[\.\/]+/g, '-') || 'home';
+        url = decodeURI(url);
+        const imageName = url.replace(/^\/|\/$/g, '').replace(/\\"&/g, '').replace(/^https?:\/\/[^\/]+\//, '').replace(/[\.\/]+/g, '-') || 'home';
+        console.log(`URL: "${url}" - Name: ${imageName}`);
         browser.newPage().then((page) => {
             // console.log(`Set viewport `);
             return new Promise(async (resolve, reject) => {
@@ -129,12 +131,14 @@ let takeScreenshot = (browser, url) => {
             progressBar.update(urls.indexOf(url));
             return new Promise(async (resolve, reject) => {
                 await page.screenshot({path: `${IMAGE_FOLDER}/${imageName}.png`, fullPage: true});
-                await compareImage.isTheSame(`${IMAGE_FOLDER}/${imageName}.png`.replace('/current/', '/stable/'),
-                    `${IMAGE_FOLDER}/${imageName}.png`,
-                    path.dirname(`${IMAGE_FOLDER}/${imageName}.png`.replace('/current/', '/output/')))
-                    .then((result) => {
-                        console.log(result.stdout);
-                    });
+                let stableFile = `${IMAGE_FOLDER}/${imageName}.png`.replace('/current/', '/stable/');
+                if (fs.existsSync(stableFile)) {
+                    await compareImage.isTheSame(stableFile, `${IMAGE_FOLDER}/${imageName}.png`,
+                        path.dirname(`${IMAGE_FOLDER}/${imageName}.png`.replace('/current/', '/output/')))
+                        .then((result) => {
+                            console.log(result.stdout);
+                        });
+                }
                 resolve(page);
             })
         }).then((page) => {
