@@ -7,6 +7,7 @@ const path = require('path');
 const _cliProgress = require('cli-progress');
 const Sitemap = require('./src/sitemap-generator');
 const yargs = require('yargs');
+const winston = require('winston');
 
 const yargsConfig = require('./src/yargs-config');
 const conf = require('./src/conf');
@@ -42,7 +43,7 @@ let run = async () => {
     console.time('Everything generated');
     urls = await Sitemap.generate(argv.url, argv.generateSitemap);
     generateScreenshots(urls).catch(err => {
-        console.log(err);
+        winston.info(err);
     });
 };
 
@@ -55,7 +56,7 @@ let generateScreenshots = async (urls) => {
 
     console.time("All Screenshot generation");
     screenshotsFor(browser, urls, 0, 2).then(() => {
-        console.log("");
+        winston.info("");
         console.timeEnd(`All Screenshot generation`);
         console.timeEnd('Everything generated');
         // let pages = await browser.pages();
@@ -77,11 +78,11 @@ let screenshotsFor = (browser, urls, startIndex, limit) => {
             promises.push(promise);
         }
         Promise.all(promises).then(() => {
-            // console.log(`Taken screenshots for range ${startIndex} - ${startIndex + limit}`);
+            // winston.info(`Taken screenshots for range ${startIndex} - ${startIndex + limit}`);
             if (startIndex >= urls.length) {
                 resolve()
             } else {
-                // console.log(`Calling screenshots for range ${startIndex + limit} - ${startIndex + limit + limit}`);
+                // winston.info(`Calling screenshots for range ${startIndex + limit} - ${startIndex + limit + limit}`);
                 screenshotsFor(browser, urls, startIndex + limit, limit).then(() => {
                     resolve();
                 });
@@ -97,18 +98,18 @@ let screenshotsFor = (browser, urls, startIndex, limit) => {
 
 let takeScreenshot = (browser, url) => {
     return new Promise((resolve, reject) => {
-        // console.log(`Start generating ${url}`);
+        // winston.info(`Start generating ${url}`);
         url = decodeURI(url);
         const imageName = url.replace(/^\/|\/$/g, '').replace(/\\"&/g, '').replace(/^https?:\/\/[^\/]+\//, '').replace(/[\.\/]+/g, '-') || 'home';
-        // console.log(`URL: "${url}" - Name: ${imageName}`);
+        // winston.info(`URL: "${url}" - Name: ${imageName}`);
         browser.newPage().then((page) => {
-            // console.log(`Set viewport `);
+            // winston.info(`Set viewport `);
             return new Promise(async (resolve, reject) => {
                 await page.setViewport(RESOLUTION);
                 resolve(page);
             })
         }).then((page) => {
-            // console.log(`Go to page`);
+            // winston.info(`Go to page`);
             return new Promise(async (resolve, reject) => {
                 try {
                     if (conf.HTTP_BASIC_AUTH) {
@@ -122,7 +123,7 @@ let takeScreenshot = (browser, url) => {
                 }
             });
         }).then((page) => {
-            // console.log(`Screenshot for ${url}`);
+            // winston.info(`Screenshot for ${url}`);
             progressBar.update(urls.indexOf(url));
             return new Promise(async (resolve, reject) => {
                 await page.screenshot({path: `${IMAGE_FOLDER}/${imageName}.png`, fullPage: true});
@@ -131,13 +132,13 @@ let takeScreenshot = (browser, url) => {
                     await compareImage.isTheSame(stableFile, `${IMAGE_FOLDER}/${imageName}.png`,
                         path.dirname(`${IMAGE_FOLDER}/${imageName}.png`.replace('/current/', '/output/')))
                         .then((result) => {
-                            console.log(result.stdout);
+                            winston.info(result.stdout);
                         });
                 }
                 resolve(page);
             })
         }).then((page) => {
-            // console.log(`Close`);
+            // winston.info(`Close`);
             return page.close();
         }).then(() => {
             resolve();
