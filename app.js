@@ -100,7 +100,7 @@ let takeScreenshot = (browser, url) => {
     return new Promise((resolve, reject) => {
         // winston.info(`Start generating ${url}`);
         url = decodeURI(url);
-        const imageName = url.replace(/^\/|\/$/g, '').replace(/\\"&/g, '').replace(/^https?:\/\/[^\/]+\//, '').replace(/[\.\/]+/g, '-') || 'home';
+        const imageName = url.replace(/^\/|\/$/g, '').replace(/\\"&/g, '').replace(/^https?:\/\/[^\/]+\/?/, '').replace(/[\.\/]+/g, '-');
         // winston.info(`URL: "${url}" - Name: ${imageName}`);
         browser.newPage().then((page) => {
             // winston.info(`Set viewport `);
