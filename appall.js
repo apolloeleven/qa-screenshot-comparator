@@ -28,7 +28,7 @@ if (startUrls.length !== languages.length) {
     console.error(`You must provide the same number of "language" and "url"`);
     return;
 }
-const RUNTIME = conf.RUNTIME;
+const RUNTIME = conf.SITES_FOLDER;
 fs.ensureDirSync(RUNTIME);
 
 async function init() {

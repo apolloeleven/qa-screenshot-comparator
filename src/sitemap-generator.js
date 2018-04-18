@@ -4,16 +4,23 @@
 const fs = require('fs');
 const SitemapGenerator = require('sitemap-generator');
 const logUpdate = require('log-update');
+const winston = require('winston');
 const conf = require('./conf');
 
 const frames = ['-', '\\', '|', '/'];
 let i = 0;
 
 const RUNTIME = conf.RUNTIME;
+const SITES_FOLDER = conf.SITES_FOLDER;
+winston.configure({
+    transports: [
+        new (winston.transports.File)({filename: `${RUNTIME}/output.log`})
+    ]
+});
 
 module.exports.generate = (url, generateSitemap) => {
 
-    const URLS_FILE = `${RUNTIME}/urls.json`;
+    const URLS_FILE = `${SITES_FOLDER}/urls.json`;
 
     // create generator
     const generator = SitemapGenerator(url, {
@@ -22,6 +29,9 @@ module.exports.generate = (url, generateSitemap) => {
         authUser: conf.HTTP_BASIC_AUTH_USERNAME,
         authPass: conf.HTTP_BASIC_AUTH_PASSWORD
     });
+    const crawler = generator.getCrawler();
+    const extRegex = new RegExp(`\\.(pdf|xml|tif)$`, 'i');
+    crawler.addFetchCondition(parsedUrl => !parsedUrl.path.match(extRegex));
 
     let urls = [];
     let frame = '';
@@ -30,9 +40,9 @@ module.exports.generate = (url, generateSitemap) => {
     return new Promise((resolve, reject) => {
 
         generator.on('add', (url) => {
-            // console.log(`Grabbed url ${url}`);
+            winston.log('error', `Grabbed url ${url}`);
             urls.push(url);
-            // logUpdate(`☕☕ ${frame} Found ${urls.length} urls ${frame} ☕☕`);
+            logUpdate(`☕☕ ${frame} Found ${urls.length} urls ${frame} ☕☕`);
         });
         generator.on('done', async ($content) => {
             clearInterval(interval);
@@ -44,7 +54,14 @@ module.exports.generate = (url, generateSitemap) => {
 
         if (generateSitemap || !fs.existsSync(URLS_FILE)) {
             console.time("Sitemap generation");
-            generator.start();
+            try {
+                generator.start();
+            } catch (e) {
+                console.error(`Website is offline ${url}`);
+                resolve(urls);
+                return;
+            }
+
             interval = setInterval(() => {
                 frame = frames[i = ++i % frames.length];
                 logUpdate(`☕☕ ${frame} Found ${urls.length} urls ${frame} ☕☕`);

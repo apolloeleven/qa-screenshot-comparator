@@ -20,8 +20,9 @@
     "pixelmatch": "^4.0.2",
     "pngjs": "^3.3.2",
     "puppeteer": "^1.2.0",
-    "sitemap-generator": "^8.0.0",
+    "sitemap-generator": "git+https://github.com/apolloeleven/sitemap-generator.git",
     "underscore": "^1.8.3",
+    "winston": "^2.4.1",
     "yargs": "^11.0.0"
   }
 }

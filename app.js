@@ -30,14 +30,9 @@ const RESOLUTION = SCREEN_RESOLUTIONS[argv.size];
 
 const progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
 
-const RUNTIME = conf.RUNTIME;
+const RUNTIME = conf.SITES_FOLDER;
 const IMAGE_FOLDER = RUNTIME + `/current/${argv.size}`;
 
-console.log(IMAGE_FOLDER);
-// if (fs.existsSync(IMAGE_FOLDER)){
-//     fx.rmdirSync(IMAGE_FOLDER);
-// }
-fs.ensureDirSync(RUNTIME);
 fs.emptyDirSync(IMAGE_FOLDER);
 
 let urls;
@@ -104,12 +99,6 @@ let takeScreenshot = (browser, url) => {
     return new Promise((resolve, reject) => {
         // console.log(`Start generating ${url}`);
         url = decodeURI(url);
-        if (/\.(html|php)$/.test(url)){
-
-        } else if (/(\.\w+)$/.test(url)){
-            resolve();
-            return;
-        }
         const imageName = url.replace(/^\/|\/$/g, '').replace(/\\"&/g, '').replace(/^https?:\/\/[^\/]+\//, '').replace(/[\.\/]+/g, '-') || 'home';
         // console.log(`URL: "${url}" - Name: ${imageName}`);
         browser.newPage().then((page) => {
