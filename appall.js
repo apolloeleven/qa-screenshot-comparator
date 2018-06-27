@@ -42,7 +42,7 @@ async function init() {
         await Sitemap.generate(url, argv.generateSitemap, language);
         for (let size of sizes) {
             console.log(`Start generating screens for "${size}" from url "${url}" in folder ${language}`);
-            let promise = exec(`node app.js -u ${url} -s=${size} -l=${language}`);
+            let promise = exec(`node app.js -u ${url} -f=${argv.folder} -s=${size} -l=${language}`);
             // promise.then((result) => {
             //     console.log(result);
             // });
