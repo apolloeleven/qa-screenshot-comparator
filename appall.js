@@ -22,12 +22,8 @@ if (!argv.size){
 }
 sizes = _.isArray(sizes) ? sizes : [sizes];
 const startUrls = _.isArray(argv.url) ? argv.url : [argv.url];
-const languages = _.isArray(argv.language) ? argv.language : [argv.language];
 
-if (startUrls.length !== languages.length) {
-    console.error(`You must provide the same number of "language" and "url"`);
-    return;
-}
+let language = argv.language;
 const RUNTIME = conf.SITES_FOLDER;
 fs.ensureDirSync(RUNTIME);
 
@@ -37,7 +33,6 @@ async function init() {
 
     for (let i = 0; i < startUrls.length; i++) {
         let url = startUrls[i];
-        let language = languages[i];
         // Generate sitemap once and cache it. It will be used from cache by calling `node app.js` command
         await Sitemap.generate(url, argv.generateSitemap, language);
         for (let size of sizes) {

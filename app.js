@@ -32,7 +32,7 @@ const RESOLUTION = SCREEN_RESOLUTIONS[argv.size];
 const progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
 
 const RUNTIME = conf.SITES_FOLDER;
-const IMAGE_FOLDER = RUNTIME + `/current/${argv.size}`;
+const IMAGE_FOLDER = RUNTIME + `/${argv.language}/current/${argv.size}`;
 
 fs.emptyDirSync(IMAGE_FOLDER);
 

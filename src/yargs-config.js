@@ -20,5 +20,12 @@ module.exports = {
         choices: ['desktop', 'laptop', 'tablet', 'mobile'],
         demand: false,
         string: true
+    },
+    'language': {
+        alias: 'l',
+        describe: 'Select Language',
+        choices: ['en', 'de'],
+        demand: false,
+        string: true
     }
 };
