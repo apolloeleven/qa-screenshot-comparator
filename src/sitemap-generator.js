@@ -40,16 +40,22 @@ module.exports.generate = (url, generateSitemap) => {
     return new Promise((resolve, reject) => {
 
         generator.on('add', (url) => {
-            winston.log('error', `Grabbed url ${url}`);
+            winston.log('info', `Grabbed url ${url}`);
             urls.push(url);
             logUpdate(`☕☕ ${frame} Found ${urls.length} urls ${frame} ☕☕`);
         });
         generator.on('done', async ($content) => {
+            winston.log('info', `Totally grabbed ${urls.length} urls`);
             clearInterval(interval);
             logUpdate.done();
             console.timeEnd("Sitemap generation");
             fs.writeFileSync(URLS_FILE, JSON.stringify(urls, undefined, 2));
             resolve(urls);
+        });
+        generator.on('error', async (object) => {
+            winston.log('error', `Error in URL grab!!! Code: ${object.code}. Message: "${object.message}". url ${object.url}`);
+            urls.push(object.url);
+            logUpdate(`☕☕ ${frame} Found ${urls.length} urls ${frame} ☕☕`);
         });
 
         if (generateSitemap || !fs.existsSync(URLS_FILE)) {
