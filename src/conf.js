@@ -4,7 +4,19 @@
 const fs = require('fs-extra');
 const path = require('path');
 const yargs = require('yargs');
-const env = require('../env');
+
+let env;
+try {
+    env = require('../env');
+} catch (ex) {
+    env = {
+        httpBasicAuth: false,
+        httpBasicAuthUsername: '',
+        httpBasicAuthPassword: ''
+    }
+}
+
+
 
 const yargsConfig = require('./yargs-config');
 
