@@ -1,7 +1,14 @@
 {
   "name": "qa-screenshot-comparator",
-  "version": "1.0.1",
-  "description": "",
+  "description": "Simple tool for generating and comparing websitre screenshots.",
+  "keywords": [
+    "screenshot",
+    "compare",
+    "image",
+    "comparator",
+    "simple"
+  ],
+  "version": "1.0.2",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

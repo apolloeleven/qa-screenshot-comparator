@@ -17,8 +17,8 @@ module.exports = {
     'size': {
         alias: 's',
         describe: 'Choose the resolution',
-        choices: ['desktop', 'laptop', 'tablet', 'mobile'],
-        demand: false,
+        choices: ['desktop', 'laptop', 'tablet', 'mobile','all'],
+        demand: true,
         string: true
     },
     'language': {
@@ -27,5 +27,12 @@ module.exports = {
         choices: ['en', 'de'],
         demand: false,
         string: true
+    },
+    'folder': {
+        alias: 'f',
+        describe: 'Folder in which the images will be saved',
+        demand: false,
+        string: true
     }
-};
+}
+;
