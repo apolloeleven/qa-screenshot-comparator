@@ -5,8 +5,6 @@ const yargs = require('yargs');
 const conf = require('./src/conf');
 const Generator = require('./generator');
 
-conf.yargsConfig.size.demand = true;
-
 let resolutions = [];
 const argv = yargs
     .options(conf.yargsConfig)

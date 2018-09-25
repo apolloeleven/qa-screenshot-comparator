@@ -18,7 +18,7 @@ module.exports = {
         alias: 's',
         describe: 'Choose the resolution',
         choices: ['desktop', 'laptop', 'tablet', 'mobile','all'],
-        demand: false,
+        demand: true,
         string: true
     },
     'language': {
