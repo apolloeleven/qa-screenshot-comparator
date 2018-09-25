@@ -4,6 +4,8 @@ const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 const _cliProgress = require('cli-progress');
 const conf = require('./src/conf');
+const compareImage = require('./compare-image');
+const path = require('path');
 
 class Generator {
     constructor(params) {
@@ -101,7 +103,7 @@ class Generator {
                     await page.screenshot({path: `${this.imageFolder}/${imageName}.png`, fullPage: true});
                     let stableFile = `${this.imageFolder}/${imageName}.png`.replace('/current/', '/stable/');
                     if (fs.existsSync(stableFile)) {
-                        await compareImage.isTheSame(stableFile, `${IMAGE_FOLDER}/${imageName}.png`,
+                        await compareImage.isTheSame(stableFile, `${this.imageFolder}/${imageName}.png`,
                             path.dirname(`${this.imageFolder}/${imageName}.png`.replace('/current/', '/output/')))
                             .then((result) => {
                                 winston.info(result.stdout);
