@@ -5,6 +5,11 @@
     <br>
 </p>
 
+> This handy tool gives us the possibility to generate website screenshots for any resolution.
+
+###
+
+
 
 
 #### Generating screenshots for all resolutions
