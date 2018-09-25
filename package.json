@@ -1,6 +1,6 @@
 {
   "name": "qa-screenshot-comparator",
-  "description": "Simple tool for generating and comparing websitre screenshots."
+  "description": "Simple tool for generating and comparing websitre screenshots.",
   "keywords": [
     "screenshot",
     "compare",
