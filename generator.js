@@ -98,7 +98,7 @@ class Generator {
                     }
                 });
             }).then((page) => {
-                this.alterProgressBar("update",url);
+                this.alterProgressBar("update", url);
                 return new Promise(async (resolve, reject) => {
                     await page.screenshot({path: `${this.imageFolder}/${imageName}.png`, fullPage: true});
                     let stableFile = `${this.imageFolder}/${imageName}.png`.replace('/current/', '/stable/');
@@ -121,7 +121,7 @@ class Generator {
         });
     };
 
-    alterProgressBar(action,currentUrl = null) {
+    alterProgressBar(action, currentUrl = null) {
         if (this.progressBar) {
             switch (action) {
                 case "start":

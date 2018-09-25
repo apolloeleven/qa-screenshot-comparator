@@ -18,9 +18,9 @@ if (argv.size !== 'all') {
     resolutions = conf.SCREEN_RESOLUTIONS;
 }
 
-for(let i in resolutions) {
-    const IMAGE_FOLDER = conf.SITES_FOLDER + `/${argv.language}/current/${i}`;
-    console.log(`Start generating screens for "${i}" from url "${argv.url}" in folder "${argv.language}"`);
+for (let i in resolutions) {
+    const IMAGE_FOLDER = conf.SITES_FOLDER + `/current/${i}`;
+    console.log(`Start generating screens for "${i}" from url "${argv.url}"`);
     let generator = new Generator({
         url: argv.url,
         imageFolder: IMAGE_FOLDER,

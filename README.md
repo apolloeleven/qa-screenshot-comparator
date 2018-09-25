@@ -15,13 +15,13 @@
 #### Generating screenshots for all resolutions
 
 ```
-node app.js -u=[example.com] -l=en -s=all
+node app.js -u=[example.com] -s=all
 ```
 
 #### Generating screenshots for single resolution
 
 ```
-node app.js -u=[example.com] -l=en -s=mobile
+node app.js -u=[example.com] -s=mobile
 ```
 
 #### Available sizes
