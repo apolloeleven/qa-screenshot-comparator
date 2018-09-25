@@ -4,6 +4,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const yargs = require('yargs');
+const yargsConfig = require('./yargs-config');
 
 let env;
 try {
@@ -16,22 +17,11 @@ try {
     }
 }
 
-
-
-const yargsConfig = require('./yargs-config');
-
-yargsConfig.folder = {
-    alias: 'f',
-    describe: 'Folder in which the images will be saved',
-    demand: false,
-    string: true
-};
 const argv = yargs
     .options(yargsConfig)
     .help('h')
     .alias('help', 'h')
-    .argv
-;
+    .argv;
 
 const WEBSITE_NAME = argv.folder || argv.url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
 const ROOT_PATH = path.dirname(require.main.filename);
@@ -49,4 +39,11 @@ module.exports = {
     HTTP_BASIC_AUTH: env.httpBasicAuth,
     HTTP_BASIC_AUTH_USERNAME: env.httpBasicAuthUsername,
     HTTP_BASIC_AUTH_PASSWORD: env.httpBasicAuthPassword,
+    yargsConfig: yargsConfig,
+    SCREEN_RESOLUTIONS: {
+        desktop: {width: 1440, height: 10},
+        laptop: {width: 1024, height: 10},
+        tablet: {width: 768, height: 10},
+        mobile: {width: 360, height: 10},
+    },
 };
