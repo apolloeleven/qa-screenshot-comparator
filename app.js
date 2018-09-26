@@ -3,11 +3,13 @@
  */
 const yargs = require('yargs');
 const conf = require('./src/conf');
+const yargsConfig = require('./src/yargs-config');
+const path = require('path');
 const Generator = require('./generator');
 
 let resolutions = [];
 const argv = yargs
-    .options(conf.yargsConfig)
+    .options(yargsConfig)
     .help('h')
     .alias('help', 'h')
     .argv;
@@ -18,16 +20,18 @@ if (argv.size !== 'all') {
     resolutions = conf.SCREEN_RESOLUTIONS;
 }
 
+const ROOT_PATH = path.dirname(require.main.filename);
+const RUNTIME = `${ROOT_PATH}/runtime`;
+
 for (let i in resolutions) {
-    const IMAGE_FOLDER = conf.SITES_FOLDER + `/current/${i}`;
     console.log(`Start generating screens for "${i}" from url "${argv.url}"`);
     let generator = new Generator({
         url: argv.url,
-        imageFolder: IMAGE_FOLDER,
         generateSitemap: argv.generateSitemap,
         resolution: resolutions[i],
         withProgressBar: true,
-        resolutionName: i
+        resolutionName: i,
+        runtime: RUNTIME
     });
     generator.run();
 }

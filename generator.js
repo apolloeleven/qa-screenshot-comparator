@@ -1,4 +1,3 @@
-const Sitemap = require('./src/sitemap-generator');
 const winston = require('winston');
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
@@ -6,27 +5,42 @@ const _cliProgress = require('cli-progress');
 const conf = require('./src/conf');
 const compareImage = require('./compare-image');
 const path = require('path');
+const SitemapGenerator = require('sitemap-generator');
+const logUpdate = require('log-update');
+const frames = ['-', '\\', '|', '/'];
+let siteMapIndex = 0;
 
 class Generator {
     constructor(params) {
         this.url = params.url;
-        this.imageFolder = params.imageFolder;
         this.generateSitemap = params.generateSitemap;
         this.resolution = params.resolution;
         this.urls = [];
         this.withProgressBar = !!params.withProgressBar;
         this.resolutionName = params.resolutionName;
+        this.RUNTIME = params.runtime;
+        this.websiteName = this.url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
+        this.sitesFolder = `${this.RUNTIME}/websites/${this.websiteName}`;
+        this.imageFolder = `${this.sitesFolder}/current/${this.resolutionName}`;
 
         this.progressBar = null;
         if (this.withProgressBar) {
             this.progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
         }
 
+        fs.ensureDirSync(this.sitesFolder);
+
         fs.emptyDirSync(this.imageFolder);
+
+        winston.configure({
+            transports: [
+                new (winston.transports.File)({filename: `${this.RUNTIME}/output.log`})
+            ]
+        });
     }
 
     async run() {
-        this.urls = await Sitemap.generate(this.url, this.generateSitemap);
+        this.urls = await this.generateSiteMap(this.url, this.generateSitemap);
         this.generateScreenshots(this.urls).catch(err => {
             winston.info(err);
         });
@@ -138,8 +152,68 @@ class Generator {
             }
         }
     }
-}
 
+    generateSiteMap(url, generateSitemap) {
+
+        const URLS_FILE = `${this.sitesFolder}/urls.json`;
+
+        // create generator
+        const generator = SitemapGenerator(url, {
+            stripQuerystring: true,
+            needsAuth: conf.HTTP_BASIC_AUTH,
+            authUser: conf.HTTP_BASIC_AUTH_USERNAME,
+            authPass: conf.HTTP_BASIC_AUTH_PASSWORD
+        });
+        const crawler = generator.getCrawler();
+        const extRegex = new RegExp(`\\.(pdf|xml|tif)$`, 'i');
+        crawler.addFetchCondition(parsedUrl => !parsedUrl.path.match(extRegex));
+
+        let urls = [];
+        let frame = '';
+        let interval;
+
+        return new Promise((resolve, reject) => {
+
+            generator.on('add', (url) => {
+                winston.log('info', `Grabbed url ${url}`);
+                urls.push(url);
+                logUpdate(`☕☕ ${frame} Found ${urls.length} urls ${frame} ☕☕`);
+            });
+            generator.on('done', async ($content) => {
+                winston.log('info', `Totally grabbed ${urls.length} urls`);
+                clearInterval(interval);
+                logUpdate.done();
+                console.timeEnd(`Sitemap generation - ${this.resolutionName}`);
+                fs.writeFileSync(URLS_FILE, JSON.stringify(urls, undefined, 2));
+                resolve(urls);
+            });
+            generator.on('error', async (object) => {
+                winston.log('error', `Error in URL grab!!! Code: ${object.code}. Message: "${object.message}". url ${object.url}`);
+                urls.push(object.url);
+                logUpdate(`☕☕ ${frame} Found ${urls.length} urls ${frame} ☕☕`);
+            });
+
+            if (generateSitemap || !fs.existsSync(URLS_FILE)) {
+                console.time(`Sitemap generation - ${this.resolutionName}`);
+                try {
+                    generator.start();
+                } catch (e) {
+                    console.error(`Website is offline ${url}`);
+                    resolve(urls);
+                    return;
+                }
+
+                interval = setInterval(() => {
+                    frame = frames[siteMapIndex = ++siteMapIndex % frames.length];
+                    logUpdate(`☕☕ ${frame} Found ${urls.length} urls ${frame} ☕☕`);
+                }, 80);
+            } else {
+                let data = fs.readFileSync(URLS_FILE, 'utf8');
+                resolve(JSON.parse(data));
+            }
+        });
+    };
+}
 
 // export the class
 module.exports = Generator;
