@@ -24,12 +24,6 @@ node app.js -u=[example.com] -s=all
 node app.js -u=[example.com] -s=mobile
 ```
 
-#### Available sizes
-
-``
-[ desktop, laptop, tablet, mobile, all ]
-``
-
 ### Use from code directly
 ```
 const Generator = require('./generator');
@@ -44,6 +38,12 @@ let generator = new Generator({
 generator.run();
 
 ```
+
+#### Available sizes
+
+``
+[ desktop, laptop, tablet, mobile, all ]
+``
 
 ### Common resolutions
 
