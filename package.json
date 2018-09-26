@@ -25,5 +25,21 @@
     "underscore": "^1.8.3",
     "winston": "^2.4.1",
     "yargs": "^11.0.0"
-  }
+  },
+  "files":[
+    "index.js",
+    ".gitlab-ci.yml",
+    "app.js",
+    "CliColor.php",
+    "compare-image.js",
+    "env.dist.js",
+    "generator.js",
+    "ImageCompare.php",
+    "index-single.php",
+    "Logger.php",
+    "README.md",
+    "Roboto-Regular.ttf",
+    "sitemap.xml",
+    "src/"
+  ]
 }
