@@ -61,7 +61,8 @@ class Generator {
         this.screenshotsFor(browser, urls, 0, 2).then(() => {
             browser.close();
             this.triggerEvent("onScreenshotGenerationFinish", {
-                resolutionName: this.resolutionName
+                resolutionName: this.resolutionName,
+                folderName: this.sitesFolder
             })
         });
     };
