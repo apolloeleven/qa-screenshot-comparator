@@ -25,7 +25,8 @@ class Generator {
         this.onUrlFindFinish = params.onUrlFindFinish;
         this.onUrlFindError = params.onUrlFindError;
         this.onScreenshotGenerationStart = params.onScreenshotGenerationStart;
-        this.onScreenshotGenerationChange = params.onScreenshotGenerationChange;
+        this.onScreenshotGenerate = params.onScreenshotGenerate;
+        this.onScreenshotCompare = params.onScreenshotCompare;
         this.onScreenshotGenerationFinish = params.onScreenshotGenerationFinish;
 
         fs.ensureDirSync(this.sitesFolder);
@@ -115,18 +116,45 @@ class Generator {
                     }
                 });
             }).then((page) => {
-                this.triggerEvent('onScreenshotGenerationChange', {
-                    'currentUrlIndex': this.urls.indexOf(url)
-                });
+
                 return new Promise(async (resolve, reject) => {
-                    await page.screenshot({path: `${this.imageFolder}/${imageName}.png`, fullPage: true});
-                    let stableFile = `${this.imageFolder}/${imageName}.png`.replace('/current/', '/stable/');
+                    let newFile = `${this.imageFolder}/${imageName}.png`;
+                    await page.screenshot({path: newFile, fullPage: true});
+                    this.triggerEvent('onScreenshotGenerate', {
+                        'currentUrlIndex': this.urls.indexOf(url),
+                        'path': newFile,
+                        'url': url
+                    });
+                    let stableFile = newFile.replace('/current/', '/stable/');
                     if (fs.existsSync(stableFile)) {
-                        await compareImage.isTheSame(stableFile, `${this.imageFolder}/${imageName}.png`,
-                            path.dirname(`${this.imageFolder}/${imageName}.png`.replace('/current/', '/output/')))
+                        let output = newFile.replace('/current/', '/output/');
+                        await compareImage.isTheSame(stableFile, newFile,
+                            path.dirname(output))
                             .then((result) => {
                                 winston.info(result.stdout);
                             });
+                        let params = {
+                            'currentUrlIndex': this.urls.indexOf(url),
+                            'url': url,
+                            'new': newFile,
+                            'stable': stableFile
+                        };
+                        let newImage = output.replace(/\.png$/, '_new.png');
+                        fs.access(newImage, fs.constants.R_OK, (err) => {
+                            if (!err){
+                                params.newImage = newImage;
+                                let stableImage = output.replace(/\.png$/, '_stable.png');
+                                fs.access(stableImage, fs.constants.R_OK, (err) => {
+                                    if (!err){
+                                        params.stableImage = stableImage;
+                                    }
+                                    this.triggerEvent('onScreenshotCompare', params);
+                                });
+                            } else {
+                                this.triggerEvent('onScreenshotCompare', params);
+                            }
+                        });
+
                     }
                     resolve(page);
                 })

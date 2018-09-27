@@ -51,8 +51,11 @@ for (let i in resolutions) {
         onScreenshotGenerationStart: function (data) {
             progressBar.start(data.urlsCount, data.startIndex);
         },
-        onScreenshotGenerationChange: function (data) {
-            progressBar.update(data.currentUrlIndex);
+        onScreenshotGenerate: function (data) {
+            console.log(data);
+        },
+        onScreenshotCompare: function (data) {
+            console.log(data);
         },
         onScreenshotGenerationFinish: function (data) {
             progressBar.stop();
