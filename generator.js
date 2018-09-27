@@ -42,28 +42,28 @@ class Generator {
 
     async run() {
         this.urls = await this.generateSiteMap(this.url, this.generateSitemap);
-        this.generateScreenshots(this.urls).catch(err => {
+        return this.generateScreenshots(this.urls).catch(err => {
             winston.info(err);
         });
     }
 
-    async generateScreenshots(urls) {
-
-        this.triggerEvent('onScreenshotGenerationStart', {
-            urlsCount: this.urls.length,
-            startIndex: 0,
-            urls: this.urls,
-            resolutionName: this.resolutionName
-        });
-
-        const browser = await puppeteer.launch({headless: true});
-
-        this.screenshotsFor(browser, urls, 0, 2).then(() => {
-            browser.close();
-            this.triggerEvent("onScreenshotGenerationFinish", {
-                resolutionName: this.resolutionName,
-                folderName: this.sitesFolder
-            })
+    generateScreenshots(urls) {
+        return new Promise(async (resolve, reject) => {
+            this.triggerEvent('onScreenshotGenerationStart', {
+                urlsCount: this.urls.length,
+                startIndex: 0,
+                urls: this.urls,
+                resolutionName: this.resolutionName
+            });
+            const browser = await puppeteer.launch({headless: true});
+            this.screenshotsFor(browser, urls, 0, 2).then(() => {
+                browser.close();
+                this.triggerEvent("onScreenshotGenerationFinish", {
+                    resolutionName: this.resolutionName,
+                    folderName: this.sitesFolder
+                });
+                resolve()
+            });
         });
     };
 
@@ -146,11 +146,11 @@ class Generator {
                         };
                         let newImage = output.replace(/\.png$/, '_new.png');
                         fs.access(newImage, fs.constants.R_OK, (err) => {
-                            if (!err){
+                            if (!err) {
                                 params.newImage = newImage;
                                 let stableImage = output.replace(/\.png$/, '_stable.png');
                                 fs.access(stableImage, fs.constants.R_OK, (err) => {
-                                    if (!err){
+                                    if (!err) {
                                         params.stableImage = stableImage;
                                     }
                                     this.triggerEvent('onScreenshotCompare', params);
