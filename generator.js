@@ -136,11 +136,12 @@ class Generator {
                                 winston.info(result.stdout);
                             });
                         let params = {
-                            'currentUrlIndex': this.urls.indexOf(url),
-                            'url': url,
-                            'new': newFile,
-                            'stable': stableFile,
-                            resolutionName: this.resolutionName
+                            currentUrlIndex: this.urls.indexOf(url),
+                            url: url,
+                            new: newFile,
+                            stable: stableFile,
+                            resolutionName: this.resolutionName,
+                            folderName: this.sitesFolder
                         };
                         let newImage = output.replace(/\.png$/, '_new.png');
                         fs.access(newImage, fs.constants.R_OK, (err) => {
