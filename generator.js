@@ -52,7 +52,8 @@ class Generator {
         this.triggerEvent('onScreenshotGenerationStart', {
             urlsCount: this.urls.length,
             startIndex: 0,
-            urls: this.urls
+            urls: this.urls,
+            resolutionName: this.resolutionName
         });
 
         const browser = await puppeteer.launch({headless: true});
@@ -123,7 +124,8 @@ class Generator {
                     this.triggerEvent('onScreenshotGenerate', {
                         'currentUrlIndex': this.urls.indexOf(url),
                         'path': newFile,
-                        'url': url
+                        'url': url,
+                        resolutionName: this.resolutionName
                     });
                     let stableFile = newFile.replace('/current/', '/stable/');
                     if (fs.existsSync(stableFile)) {
@@ -137,7 +139,8 @@ class Generator {
                             'currentUrlIndex': this.urls.indexOf(url),
                             'url': url,
                             'new': newFile,
-                            'stable': stableFile
+                            'stable': stableFile,
+                            resolutionName: this.resolutionName
                         };
                         let newImage = output.replace(/\.png$/, '_new.png');
                         fs.access(newImage, fs.constants.R_OK, (err) => {
@@ -194,7 +197,8 @@ class Generator {
                 this.triggerEvent("onUrlFound", {
                     frame: frame,
                     foundUrlCount: urls.length,
-                    url: url
+                    url: url,
+                    resolutionName: this.resolutionName
                 });
             });
             generator.on('done', async ($content) => {
@@ -212,7 +216,8 @@ class Generator {
                     foundUrlCount: urls.length,
                     url: object.url,
                     errorCode: object.code,
-                    message: object.message
+                    message: object.message,
+                    resolutionName: this.resolutionName
                 });
             });
 
