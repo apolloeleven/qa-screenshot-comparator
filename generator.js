@@ -12,13 +12,11 @@ class Generator {
     constructor(params) {
         this.url = params.url;
         this.generateSitemap = params.generateSitemap;
-        this.resolution = params.resolution;
         this.urls = [];
         this.resolutionName = params.resolutionName;
         this.RUNTIME = params.runtime;
         this.websiteName = this.url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
         this.sitesFolder = `${this.RUNTIME}/websites/${this.websiteName}`;
-        this.imageFolder = `${this.sitesFolder}/current/${this.resolutionName}`;
 
         //Event listeners
         this.onUrlFound = params.onUrlFound;
@@ -31,8 +29,6 @@ class Generator {
 
         fs.ensureDirSync(this.sitesFolder);
 
-        fs.emptyDirSync(this.imageFolder);
-
         winston.configure({
             transports: [
                 new (winston.transports.File)({filename: `${this.RUNTIME}/output.log`})
@@ -42,24 +38,43 @@ class Generator {
 
     async run() {
         this.urls = await this.generateSiteMap(this.url, this.generateSitemap);
-        return this.generateScreenshots(this.urls).catch(err => {
-            winston.info(err);
-        });
+        let promiseArray = [];
+        let imageFolder = '';
+
+        if (this.resolutionName === 'all') {
+            for (let resolution in conf.SCREEN_RESOLUTIONS) {
+                imageFolder = `${this.sitesFolder}/current/${resolution}`;
+                fs.emptyDirSync(imageFolder);
+                promiseArray.push(this.generateScreenshots(this.urls, resolution, imageFolder).catch(err => {
+                    winston.info(err);
+                }));
+            }
+        } else {
+            imageFolder = `${this.sitesFolder}/current/${this.resolutionName}`;
+            fs.emptyDirSync(imageFolder);
+            promiseArray.push(this.generateScreenshots(this.urls, this.resolutionName, imageFolder).catch(err => {
+                winston.info(err);
+            }));
+        }
+
+        return Promise.all(promiseArray);
     }
 
-    generateScreenshots(urls) {
+    generateScreenshots(urls, resolutionName, imageFolder) {
         return new Promise(async (resolve, reject) => {
             this.triggerEvent('onScreenshotGenerationStart', {
                 urlsCount: this.urls.length,
                 startIndex: 0,
                 urls: this.urls,
-                resolutionName: this.resolutionName
+                resolutionName: resolutionName
             });
+
+            //todo maybe better if 1 browser created, not resolution count
             const browser = await puppeteer.launch({headless: true});
-            this.screenshotsFor(browser, urls, 0, 2).then(() => {
+            this.screenshotsFor(browser, urls, 0, 2, resolutionName, imageFolder).then(() => {
                 browser.close();
                 this.triggerEvent("onScreenshotGenerationFinish", {
-                    resolutionName: this.resolutionName,
+                    resolutionName: resolutionName,
                     folderName: this.sitesFolder
                 });
                 resolve()
@@ -67,24 +82,24 @@ class Generator {
         });
     };
 
-    screenshotsFor(browser, urls, startIndex, limit) {
+    screenshotsFor(browser, urls, startIndex, limit, resolutionName, imageFolder) {
         return new Promise((resolve, reject) => {
             let promises = [];
             let size = Math.min(urls.length, startIndex + limit);
             for (let i = startIndex; i < size; i++) {
-                let promise = this.takeScreenshot(browser, urls[i]);
+                let promise = this.takeScreenshot(browser, urls[i], resolutionName, imageFolder);
                 promises.push(promise);
             }
             Promise.all(promises).then(() => {
                 if (startIndex >= urls.length) {
                     resolve()
                 } else {
-                    this.screenshotsFor(browser, urls, startIndex + limit, limit).then(() => {
+                    this.screenshotsFor(browser, urls, startIndex + limit, limit, resolutionName, imageFolder).then(() => {
                         resolve();
                     });
                 }
             }, () => {
-                this.screenshotsFor(browser, urls, startIndex + limit, limit).then(() => {
+                this.screenshotsFor(browser, urls, startIndex + limit, limit, resolutionName, imageFolder).then(() => {
                     resolve();
                 });
             });
@@ -92,13 +107,13 @@ class Generator {
 
     };
 
-    takeScreenshot(browser, url) {
+    takeScreenshot(browser, url, resolutionName, imageFolder) {
         return new Promise((resolve, reject) => {
             url = decodeURI(url);
             const imageName = url.replace(/^\/|\/$/g, '').replace(/\\"&/g, '').replace(/^https?:\/\/[^\/]+\/?/, '').replace(/[\.\/]+/g, '-');
             browser.newPage().then((page) => {
                 return new Promise(async (resolve, reject) => {
-                    await page.setViewport(this.resolution);
+                    await page.setViewport(conf.SCREEN_RESOLUTIONS[resolutionName]);
                     resolve(page);
                 })
             }).then((page) => {
@@ -120,13 +135,13 @@ class Generator {
             }).then((page) => {
 
                 return new Promise(async (resolve, reject) => {
-                    let newFile = `${this.imageFolder}/${imageName}.png`;
+                    let newFile = `${imageFolder}/${imageName}.png`;
                     await page.screenshot({path: newFile, fullPage: true});
                     this.triggerEvent('onScreenshotGenerate', {
                         'currentUrlIndex': this.urls.indexOf(url),
                         'path': newFile,
                         'url': url,
-                        resolutionName: this.resolutionName
+                        resolutionName: resolutionName
                     });
                     let stableFile = newFile.replace('/current/', '/stable/');
                     if (fs.existsSync(stableFile)) {
@@ -141,7 +156,7 @@ class Generator {
                             url: url,
                             new: newFile,
                             stable: stableFile,
-                            resolutionName: this.resolutionName,
+                            resolutionName: resolutionName,
                             folderName: this.sitesFolder
                         };
                         let newImage = output.replace(/\.png$/, '_new.png');
@@ -199,15 +214,13 @@ class Generator {
                 this.triggerEvent("onUrlFound", {
                     frame: frame,
                     foundUrlCount: urls.length,
-                    url: url,
-                    resolutionName: this.resolutionName
+                    url: url
                 });
             });
             generator.on('done', async ($content) => {
                 clearInterval(interval);
                 this.triggerEvent("onUrlFindFinish", {
-                    foundUrlCount: urls.length,
-                    resolutionName: this.resolutionName
+                    foundUrlCount: urls.length
                 });
                 fs.writeFileSync(URLS_FILE, JSON.stringify(urls, undefined, 2));
                 resolve(urls);
@@ -218,8 +231,7 @@ class Generator {
                     foundUrlCount: urls.length,
                     url: object.url,
                     errorCode: object.code,
-                    message: object.message,
-                    resolutionName: this.resolutionName
+                    message: object.message
                 });
             });
 
