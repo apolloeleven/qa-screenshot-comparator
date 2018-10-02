@@ -29,7 +29,7 @@ class Generator {
         this.onScreenshotGenerate = params.onScreenshotGenerate;
         this.onScreenshotCompare = params.onScreenshotCompare;
         this.onScreenshotGenerationFinish = params.onScreenshotGenerationFinish;
-        this.FILE_MAX_LENGTH = 220;
+        this.FILE_MAX_LENGTH = 215;
 
         fs.ensureDirSync(this.sitesFolder);
 
