@@ -29,7 +29,7 @@ class Generator {
         this.onScreenshotGenerate = params.onScreenshotGenerate;
         this.onScreenshotCompare = params.onScreenshotCompare;
         this.onScreenshotGenerationFinish = params.onScreenshotGenerationFinish;
-        this.FILE_MAX_LENGTH = 229;
+        this.FILE_MAX_LENGTH = 220;
 
         fs.ensureDirSync(this.sitesFolder);
 
@@ -148,7 +148,7 @@ class Generator {
                         const pngLength = 4;
                         const md5Length = 32;
                         const slashLength = 1;
-                        newFile = folderPath + image.substr(0, 229 - folderPath.length - slashLength - md5Length - pngLength) + `-${imageMD5}.png`;
+                        newFile = folderPath + image.substr(0, this.FILE_MAX_LENGTH - folderPath.length - slashLength - md5Length - pngLength) + `-${imageMD5}.png`;
                     }
 
                     await page.screenshot({path: newFile, fullPage: true});
