@@ -7,16 +7,16 @@ try {
     env = require('../env');
 } catch (ex) {
     env = {
-        httpBasicAuth: false,
-        httpBasicAuthUsername: '',
-        httpBasicAuthPassword: ''
+        authParams: {
+            HTTP_BASIC_AUTH: true,
+            HTTP_BASIC_AUTH_USERNAME: 'bcuser',
+            HTTP_BASIC_AUTH_PASSWORD: 'bc11user'
+        }
     }
 }
 
 module.exports = {
-    HTTP_BASIC_AUTH: env.httpBasicAuth,
-    HTTP_BASIC_AUTH_USERNAME: env.httpBasicAuthUsername,
-    HTTP_BASIC_AUTH_PASSWORD: env.httpBasicAuthPassword,
+    authParams: env.authParams,
     SCREEN_RESOLUTIONS: {
         desktop: {width: 1440, height: 10},
         laptop: {width: 1024, height: 10},

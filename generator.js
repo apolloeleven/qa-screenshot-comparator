@@ -19,6 +19,7 @@ class Generator {
         this.RUNTIME = params.runtime;
         this.websiteName = this.url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
         this.sitesFolder = `${this.RUNTIME}/websites/${this.websiteName}`;
+        this.authParams = params.authParams;
 
         //Event listeners
         this.onUrlFound = params.onUrlFound;
@@ -122,11 +123,10 @@ class Generator {
             }).then((page) => {
                 return new Promise(async (resolve, reject) => {
                     try {
-                        if (conf.HTTP_BASIC_AUTH) {
-                            console.log(111111111111111);
+                        if (this.authParams.HTTP_BASIC_AUTH) {
                             await page.authenticate({
-                                username: conf.HTTP_BASIC_AUTH_USERNAME,
-                                password: conf.HTTP_BASIC_AUTH_PASSWORD
+                                username: this.authParams.HTTP_BASIC_AUTH_USERNAME,
+                                password: this.authParams.HTTP_BASIC_AUTH_PASSWORD
                             });
                         }
                         await page.goto(url, {timeout: 30000});
@@ -144,7 +144,7 @@ class Generator {
                     let newFile = `${imageFolder}/${image}.png`;
                     let imageMD5 = md5(image);
 
-                    if(newFile.length >= this.FILE_MAX_LENGTH) {
+                    if (newFile.length >= this.FILE_MAX_LENGTH) {
                         const pngLength = 4;
                         const md5Length = 32;
                         const slashLength = 1;
@@ -210,9 +210,9 @@ class Generator {
         // create generator
         const generator = SitemapGenerator(url, {
             stripQuerystring: true,
-            needsAuth: conf.HTTP_BASIC_AUTH,
-            authUser: conf.HTTP_BASIC_AUTH_USERNAME,
-            authPass: conf.HTTP_BASIC_AUTH_PASSWORD
+            needsAuth: this.authParams.HTTP_BASIC_AUTH,
+            authUser: this.authParams.HTTP_BASIC_AUTH_USERNAME,
+            authPass: this.authParams.HTTP_BASIC_AUTH_PASSWORD
         });
         const crawler = generator.getCrawler();
         const extRegex = new RegExp(`\\.(pdf|xml|tif)$`, 'i');

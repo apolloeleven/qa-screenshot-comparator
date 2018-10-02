@@ -24,6 +24,7 @@ const RUNTIME = `${ROOT_PATH}/runtime`;
 let generator = new Generator({
     url: argv.url,
     generateSitemap: argv.generateSitemap,
+    authParams: conf.authParams,
     resolutionName: argv.size,
     runtime: RUNTIME,
     onUrlFound: function (data) {

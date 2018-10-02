@@ -3,7 +3,9 @@
  */
 
 module.exports = {
-    httpBasicAuth: true,
-    httpBasicAuthUsername: '',
-    httpBasicAuthPassword: ''
+    authParams: {
+        HTTP_BASIC_AUTH: env.httpBasicAuth,
+        HTTP_BASIC_AUTH_USERNAME: env.httpBasicAuthUsername,
+        HTTP_BASIC_AUTH_PASSWORD: env.httpBasicAuthPassword,
+    }
 };
