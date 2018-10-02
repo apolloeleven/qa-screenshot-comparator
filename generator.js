@@ -1,10 +1,12 @@
 const winston = require('winston');
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
+const path = require('path');
+const md5 = require('md5');
 const conf = require('./src/conf');
 const compareImage = require('./compare-image');
-const path = require('path');
 const SitemapGenerator = require('sitemap-generator');
+
 const frames = ['-', '\\', '|', '/'];
 let siteMapIndex = 0;
 
@@ -26,6 +28,7 @@ class Generator {
         this.onScreenshotGenerate = params.onScreenshotGenerate;
         this.onScreenshotCompare = params.onScreenshotCompare;
         this.onScreenshotGenerationFinish = params.onScreenshotGenerationFinish;
+        this.FILE_MAX_LENGTH = 229;
 
         fs.ensureDirSync(this.sitesFolder);
 
@@ -120,6 +123,7 @@ class Generator {
                 return new Promise(async (resolve, reject) => {
                     try {
                         if (conf.HTTP_BASIC_AUTH) {
+                            console.log(111111111111111);
                             await page.authenticate({
                                 username: conf.HTTP_BASIC_AUTH_USERNAME,
                                 password: conf.HTTP_BASIC_AUTH_PASSWORD
@@ -135,7 +139,18 @@ class Generator {
             }).then((page) => {
 
                 return new Promise(async (resolve, reject) => {
-                    let newFile = `${imageFolder}/${imageName}.png`;
+                    let image = `${imageName}`;
+                    let folderPath = `${imageFolder}/`;
+                    let newFile = `${imageFolder}/${image}.png`;
+                    let imageMD5 = md5(image);
+
+                    if(newFile.length >= this.FILE_MAX_LENGTH) {
+                        const pngLength = 4;
+                        const md5Length = 32;
+                        const slashLength = 1;
+                        newFile = folderPath + image.substr(0, 229 - folderPath.length - slashLength - md5Length - pngLength) + `-${imageMD5}.png`;
+                    }
+
                     await page.screenshot({path: newFile, fullPage: true});
                     this.triggerEvent('onScreenshotGenerate', {
                         'currentUrlIndex': this.urls.indexOf(url),
