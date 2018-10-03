@@ -194,7 +194,7 @@ class Generator {
                     //Generating thumbnails for screenshots async
                     if (this.includeThumbnails) {
                         const thumbnailFolder = `${folderPath}-thumbnails`;
-                        thumb({
+                        await thumb({
                             source: newFile,
                             destination: thumbnailFolder,
                             overwrite: true,
