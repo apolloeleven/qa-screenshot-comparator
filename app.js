@@ -28,6 +28,7 @@ let generator = new Generator({
     includeThumbnails: true,
     thumbnailWidth: 180,
     resolutionName: argv.size,
+    folderName: argv.folder,
     runtime: RUNTIME,
     onUrlFound: function (data) {
         winston.log('info', `Grabbed url ${data.url}`);

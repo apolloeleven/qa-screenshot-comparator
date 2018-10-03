@@ -21,7 +21,8 @@ class Generator {
         this.thumbnailWidth = params.thumbnailWidth;
         this.RUNTIME = params.runtime;
         this.websiteName = this.url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
-        this.sitesFolder = `${this.RUNTIME}/websites/${this.websiteName}`;
+        this.folderName = params.folderName;
+        this.sitesFolder = `${this.RUNTIME}/websites/${this.folderName ? this.folderName : this.websiteName}`;
         this.authParams = params.authParams;
 
         //Event listeners
@@ -307,6 +308,7 @@ class Generator {
             this[eventName](data);
         }
     }
+
 }
 
 // export the class
