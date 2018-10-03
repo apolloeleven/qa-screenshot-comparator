@@ -65,6 +65,9 @@ class Generator {
             } else {
                 imageFolder = `${this.sitesFolder}/current/${this.resolutionName}`;
                 fs.emptyDirSync(imageFolder);
+                if (this.includeThumbnails) {
+                    fs.emptyDirSync(`${imageFolder}-thumbnails`)
+                }
                 promiseArray.push(this.generateScreenshots(this.urls, this.resolutionName, imageFolder).catch(err => {
                     winston.info(err);
                 }));
@@ -74,6 +77,9 @@ class Generator {
                 for (let resolution in conf.SCREEN_RESOLUTIONS) {
                     imageFolder = `${this.sitesFolder}/current/${resolution}`;
                     fs.emptyDirSync(imageFolder);
+                    if (this.includeThumbnails) {
+                        fs.emptyDirSync(`${imageFolder}-thumbnails`)
+                    }
                     promiseArray.push(this.generateScreenshots(this.urls, resolution, imageFolder).catch(err => {
                         winston.info(err);
                     }));
@@ -82,6 +88,9 @@ class Generator {
                 for (let i in this.resolutionName) {
                     imageFolder = `${this.sitesFolder}/current/${this.resolutionName[i]}`;
                     fs.emptyDirSync(imageFolder);
+                    if (this.includeThumbnails) {
+                        fs.emptyDirSync(`${imageFolder}-thumbnails`)
+                    }
                     promiseArray.push(this.generateScreenshots(this.urls, this.resolutionName[i], imageFolder).catch(err => {
                         winston.info(err);
                     }));
@@ -140,122 +149,91 @@ class Generator {
     };
 
     takeScreenshot(browser, url, resolutionName, imageFolder) {
-        return new Promise((resolve, reject) => {
-            url = decodeURI(url);
-            const imageName = url.replace(/^\/|\/$/g, '').replace(/\\"&/g, '').replace(/^https?:\/\/[^\/]+\/?/, '').replace(/[\.\/]+/g, '-');
-            browser.newPage().then((page) => {
-                return new Promise(async (resolve, reject) => {
-                    await page.setViewport(conf.SCREEN_RESOLUTIONS[resolutionName]);
-                    resolve(page);
-                })
-            }).then((page) => {
-                return new Promise(async (resolve, reject) => {
-                    try {
-                        if (this.authParams.HTTP_BASIC_AUTH) {
-                            await page.authenticate({
-                                username: this.authParams.HTTP_BASIC_AUTH_USERNAME,
-                                password: this.authParams.HTTP_BASIC_AUTH_PASSWORD
-                            });
-                        }
-                        await page.goto(url, {timeout: 30000});
-                        resolve(page);
-                    } catch (e) {
-                        console.error(`${e.message} for url ${url}`);
-                        reject();
-                    }
-                });
-            }).then((page) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                url = decodeURI(url);
+                const imageName = url.replace(/^\/|\/$/g, '').replace(/\\"&/g, '').replace(/^https?:\/\/[^\/]+\/?/, '').replace(/[\.\/]+/g, '-');
 
-                return new Promise(async (resolve, reject) => {
-                    let image = `${imageName}`;
-
-                    if(imageName === '') {
-                        image = "_" + md5(image);
-                    }
-
-                    let folderPath = `${imageFolder}`;
-                    let newFile = `${imageFolder}/${image}.png`;
-                    let imageMD5 = md5(image);
-
-                    if (newFile.length >= this.FILE_MAX_LENGTH) {
-                        // PngLength 4 md5Length 32 ThumbnailSuffixLength 6 SlashLength 1
-                        image = image.substr(0, this.FILE_MAX_LENGTH - folderPath.length - 43) + `-${imageMD5}`;
-                        newFile = `${folderPath}/${image}.png`;
-                    }
-
-                    await page.screenshot({path: newFile, fullPage: true});
-                    this.triggerEvent('onScreenshotGenerate', {
-                        'currentUrlIndex': this.urls.indexOf(url),
-                        'path': newFile,
-                        'url': url,
-                        resolutionName: resolutionName
+                let page = await browser.newPage();
+                await page.setViewport(conf.SCREEN_RESOLUTIONS[resolutionName]);
+                if (this.authParams.HTTP_BASIC_AUTH) {
+                    await page.authenticate({
+                        username: this.authParams.HTTP_BASIC_AUTH_USERNAME,
+                        password: this.authParams.HTTP_BASIC_AUTH_PASSWORD
                     });
+                }
+                await page.goto(url, {timeout: 30000});
 
-                    //Generating thumbnails for screenshots async
-                    if (this.includeThumbnails) {
-                        const thumbnailFolder = `${folderPath}-thumbnails`;
-                        await thumb({
-                            source: newFile,
-                            destination: thumbnailFolder,
-                            overwrite: true,
-                            concurrency: 4,
-                            width: this.thumbnailWidth,
-                        }).then(() => {
-                            this.triggerEvent('onScreenshotThumbnailGenerate', {
-                                path: `${thumbnailFolder}/${image}_thumb.png`,
-                                resolutionName: resolutionName,
-                                'url': url,
-                            });
-                        }).catch((e) => {
-                            console.log(e.toString());
-                            this.triggerEvent('onScreenshotThumbnailGenerateError', {
-                                message: e.toString()
-                            });
-                        });
+                let image = imageName === '' ? "_" + md5(imageName) : imageName;
+                let folderPath = `${imageFolder}`;
+                let newFile = `${imageFolder}/${image}.png`;
+                let imageMD5 = md5(image);
+
+                //Checking file max length
+                if (newFile.length >= this.FILE_MAX_LENGTH) {
+                    // PngLength 4 md5Length 32 ThumbnailSuffixLength 6 SlashLength 1
+                    image = image.substr(0, this.FILE_MAX_LENGTH - folderPath.length - 43) + `-${imageMD5}`;
+                    newFile = `${folderPath}/${image}.png`;
+                }
+
+                await page.screenshot({path: newFile, fullPage: true});
+                this.triggerEvent('onScreenshotGenerate', {
+                    'currentUrlIndex': this.urls.indexOf(url),
+                    'path': newFile,
+                    'url': url,
+                    resolutionName: resolutionName
+                });
+
+                //Generating thumbnails for screenshots async
+                if (this.includeThumbnails) {
+                    await thumb({
+                        source: newFile,
+                        destination: `${folderPath}-thumbnails`,
+                        overwrite: true,
+                        quiet: true,
+                        concurrency: 4,
+                        width: this.thumbnailWidth
+                    });
+                }
+
+                //Compare images if stable folder exist
+                let stableFile = newFile.replace('/current/', '/stable/');
+                if (fs.existsSync(stableFile)) {
+                    let output = newFile.replace('/current/', '/output/');
+                    await compareImage.isTheSame(stableFile, newFile, path.dirname(output)).then((result) => {
+                        winston.info(result.stdout);
+                    });
+                    let params = {
+                        currentUrlIndex: this.urls.indexOf(url),
+                        url: url,
+                        new: newFile,
+                        stable: stableFile,
+                        resolutionName: resolutionName,
+                        folderName: this.sitesFolder
+                    };
+                    let newImage = output.replace(/\.png$/, '_new.png');
+
+                    try {
+                        fs.accessSync(newImage, fs.constants.R_OK);
+                        params.newImage = newImage;
+                        let stableImage = output.replace(/\.png$/, '_stable.png');
+                        try {
+                            fs.accessSync(stableImage, fs.constants.R_OK);
+                            params.stableImage = stableImage;
+                            this.triggerEvent('onScreenshotCompare', params);
+                        } catch (err) {
+                        }
+                    } catch (err) {
+                        this.triggerEvent('onScreenshotCompare', params);
                     }
+                }
 
-                    let stableFile = newFile.replace('/current/', '/stable/');
-                    if (fs.existsSync(stableFile)) {
-                        let output = newFile.replace('/current/', '/output/');
-                        await compareImage.isTheSame(stableFile, newFile,
-                            path.dirname(output))
-                            .then((result) => {
-                                winston.info(result.stdout);
-                            });
-                        let params = {
-                            currentUrlIndex: this.urls.indexOf(url),
-                            url: url,
-                            new: newFile,
-                            stable: stableFile,
-                            resolutionName: resolutionName,
-                            folderName: this.sitesFolder
-                        };
-                        let newImage = output.replace(/\.png$/, '_new.png');
-                        fs.access(newImage, fs.constants.R_OK, (err) => {
-                            if (!err) {
-                                params.newImage = newImage;
-                                let stableImage = output.replace(/\.png$/, '_stable.png');
-                                fs.access(stableImage, fs.constants.R_OK, (err) => {
-                                    if (!err) {
-                                        params.stableImage = stableImage;
-                                    }
-                                    this.triggerEvent('onScreenshotCompare', params);
-                                });
-                            } else {
-                                this.triggerEvent('onScreenshotCompare', params);
-                            }
-                        });
-
-                    }
-                    resolve(page);
-                })
-            }).then((page) => {
-                return page.close();
-            }).then(() => {
+                await page.close();
                 resolve();
-            }).catch(err => {
-                reject(err);
-            });
+            } catch (error) {
+                console.log(error.toString());
+                resolve();
+            }
         });
     };
 
