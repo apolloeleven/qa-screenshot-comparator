@@ -3,6 +3,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 const path = require('path');
 const md5 = require('md5');
+const thumb = require('node-thumbnail').thumb;
 const conf = require('./src/conf');
 const compareImage = require('./compare-image');
 const SitemapGenerator = require('sitemap-generator');
@@ -16,6 +17,8 @@ class Generator {
         this.generateSitemap = params.generateSitemap;
         this.urls = [];
         this.resolutionName = params.resolutionName;
+        this.includeThumbnails = params.includeThumbnails;
+        this.thumbnailWidth = params.thumbnailWidth;
         this.RUNTIME = params.runtime;
         this.websiteName = this.url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
         this.sitesFolder = `${this.RUNTIME}/websites/${this.websiteName}`;
@@ -29,7 +32,9 @@ class Generator {
         this.onScreenshotGenerate = params.onScreenshotGenerate;
         this.onScreenshotCompare = params.onScreenshotCompare;
         this.onScreenshotGenerationFinish = params.onScreenshotGenerationFinish;
-        this.FILE_MAX_LENGTH = 215;
+        this.onScreenshotThumbnailGenerate = params.onScreenshotThumbnailGenerate;
+        this.onScreenshotThumbnailGenerateError = params.onScreenshotThumbnailGenerateError;
+        this.FILE_MAX_LENGTH = 214;
 
         fs.ensureDirSync(this.sitesFolder);
 
@@ -50,6 +55,9 @@ class Generator {
                 for (let resolution in conf.SCREEN_RESOLUTIONS) {
                     imageFolder = `${this.sitesFolder}/current/${resolution}`;
                     fs.emptyDirSync(imageFolder);
+                    if (this.includeThumbnails) {
+                        fs.emptyDirSync(`${imageFolder}-thumbnails`)
+                    }
                     promiseArray.push(this.generateScreenshots(this.urls, resolution, imageFolder).catch(err => {
                         winston.info(err);
                     }));
@@ -71,7 +79,7 @@ class Generator {
                     }));
                 }
             } else {
-                for(let i in this.resolutionName) {
+                for (let i in this.resolutionName) {
                     imageFolder = `${this.sitesFolder}/current/${this.resolutionName[i]}`;
                     fs.emptyDirSync(imageFolder);
                     promiseArray.push(this.generateScreenshots(this.urls, this.resolutionName[i], imageFolder).catch(err => {
@@ -160,15 +168,19 @@ class Generator {
 
                 return new Promise(async (resolve, reject) => {
                     let image = `${imageName}`;
-                    let folderPath = `${imageFolder}/`;
+
+                    if(imageName === '') {
+                        image = "_" + md5(image);
+                    }
+
+                    let folderPath = `${imageFolder}`;
                     let newFile = `${imageFolder}/${image}.png`;
                     let imageMD5 = md5(image);
 
                     if (newFile.length >= this.FILE_MAX_LENGTH) {
-                        const pngLength = 4;
-                        const md5Length = 32;
-                        const slashLength = 1;
-                        newFile = folderPath + image.substr(0, this.FILE_MAX_LENGTH - folderPath.length - slashLength - md5Length - pngLength) + `-${imageMD5}.png`;
+                        // PngLength 4 md5Length 32 ThumbnailSuffixLength 6 SlashLength 1
+                        image = image.substr(0, this.FILE_MAX_LENGTH - folderPath.length - 43) + `-${imageMD5}`;
+                        newFile = `${folderPath}/${image}.png`;
                     }
 
                     await page.screenshot({path: newFile, fullPage: true});
@@ -178,6 +190,30 @@ class Generator {
                         'url': url,
                         resolutionName: resolutionName
                     });
+
+                    //Generating thumbnails for screenshots async
+                    if (this.includeThumbnails) {
+                        const thumbnailFolder = `${folderPath}-thumbnails`;
+                        thumb({
+                            source: newFile,
+                            destination: thumbnailFolder,
+                            overwrite: true,
+                            concurrency: 4,
+                            width: this.thumbnailWidth,
+                        }).then(() => {
+                            this.triggerEvent('onScreenshotThumbnailGenerate', {
+                                path: `${thumbnailFolder}/${image}_thumb.png`,
+                                resolutionName: resolutionName,
+                                'url': url,
+                            });
+                        }).catch((e) => {
+                            console.log(e.toString());
+                            this.triggerEvent('onScreenshotThumbnailGenerateError', {
+                                message: e.toString()
+                            });
+                        });
+                    }
+
                     let stableFile = newFile.replace('/current/', '/stable/');
                     if (fs.existsSync(stableFile)) {
                         let output = newFile.replace('/current/', '/output/');

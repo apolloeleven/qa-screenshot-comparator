@@ -25,6 +25,8 @@ let generator = new Generator({
     url: argv.url,
     generateSitemap: argv.generateSitemap,
     authParams: conf.authParams,
+    includeThumbnails: true,
+    thumbnailWidth: 180,
     resolutionName: argv.size,
     runtime: RUNTIME,
     onUrlFound: function (data) {
@@ -51,6 +53,12 @@ let generator = new Generator({
     onScreenshotGenerationFinish: function (data) {
         progressBar.stop();
         console.log(`Finished generating screenshots for ${data.resolutionName}.`)
+    },
+    onScreenshotThumbnailGenerate: function (data) {
+        console.log(data);
+    },
+    onScreenshotThumbnailGenerateError: function (data) {
+        console.log(data);
     }
 });
 generator.run();
