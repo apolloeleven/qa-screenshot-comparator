@@ -45,20 +45,40 @@ class Generator {
         let promiseArray = [];
         let imageFolder = '';
 
-        if (this.resolutionName === 'all') {
-            for (let resolution in conf.SCREEN_RESOLUTIONS) {
-                imageFolder = `${this.sitesFolder}/current/${resolution}`;
+        if (typeof this.resolutionName === 'string') {
+            if (this.resolutionName === 'all') {
+                for (let resolution in conf.SCREEN_RESOLUTIONS) {
+                    imageFolder = `${this.sitesFolder}/current/${resolution}`;
+                    fs.emptyDirSync(imageFolder);
+                    promiseArray.push(this.generateScreenshots(this.urls, resolution, imageFolder).catch(err => {
+                        winston.info(err);
+                    }));
+                }
+            } else {
+                imageFolder = `${this.sitesFolder}/current/${this.resolutionName}`;
                 fs.emptyDirSync(imageFolder);
-                promiseArray.push(this.generateScreenshots(this.urls, resolution, imageFolder).catch(err => {
+                promiseArray.push(this.generateScreenshots(this.urls, this.resolutionName, imageFolder).catch(err => {
                     winston.info(err);
                 }));
             }
-        } else {
-            imageFolder = `${this.sitesFolder}/current/${this.resolutionName}`;
-            fs.emptyDirSync(imageFolder);
-            promiseArray.push(this.generateScreenshots(this.urls, this.resolutionName, imageFolder).catch(err => {
-                winston.info(err);
-            }));
+        } else if (typeof this.resolutionName === 'object') {
+            if (this.resolutionName.includes('all')) {
+                for (let resolution in conf.SCREEN_RESOLUTIONS) {
+                    imageFolder = `${this.sitesFolder}/current/${resolution}`;
+                    fs.emptyDirSync(imageFolder);
+                    promiseArray.push(this.generateScreenshots(this.urls, resolution, imageFolder).catch(err => {
+                        winston.info(err);
+                    }));
+                }
+            } else {
+                for(let i in this.resolutionName) {
+                    imageFolder = `${this.sitesFolder}/current/${this.resolutionName[i]}`;
+                    fs.emptyDirSync(imageFolder);
+                    promiseArray.push(this.generateScreenshots(this.urls, this.resolutionName[i], imageFolder).catch(err => {
+                        winston.info(err);
+                    }));
+                }
+            }
         }
 
         return Promise.all(promiseArray);
