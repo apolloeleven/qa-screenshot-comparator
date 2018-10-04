@@ -88,6 +88,15 @@ let authParams = {
 };
 ```
 
+#### Here is the width of the generated screenshots for each resolution name
+
+| `resolutionName`  | pixels |
+-----------|-------
+| desktop  | 1440px |
+| laptop   | 1024px |
+| tablet   | 768px  |
+| mobile   | 360px  |
+
 #### Generator event listeners
 
 | Events                             | Description                                                                                                     | Response object properties                                                                           |
@@ -102,12 +111,3 @@ let authParams = {
 | onScreenshotThumbnailGenerate      | Triggered when thumbnail is generated for a specific image                                                      |    $1                                                                                                |
 | onScreenshotThumbnailGenerateError | Triggered when thumbnail generation failed for a specific image                                                 |    $1                                                                                                |
 
-#### Resolutions
-```
-{
-    desktop: {width: 1440, height: 10},
-    laptop: {width: 1024, height: 10},
-    tablet: {width: 768, height: 10},
-    mobile: {width: 360, height: 10},
-}
-```
