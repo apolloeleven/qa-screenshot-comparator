@@ -108,81 +108,81 @@ let authParams = {
         <td>onUrlFind</td>
         <td>Triggered on each url find event while generating site map</td>
         <td>
-            <ol>
-                <li><code>foundUrlCount: [Number]</code></li>
-                <li><code>url: [String]</code></li>
-            </ol>
+            <pre><code>{
+    foundUrlCount: [Number], 
+    url: [String]
+}</code></pre>
         </td>
     </tr>
     <tr>
         <td>onUrlFindError</td>
         <td>Triggered on site map url generation error</td>
         <td>
-            <ol>
-                 <li><code>foundUrlCount: [Number]</code></li>
-                 <li><code>url: [String]</code></li>
-                 <li><code>errorCode: [String]</code></li>
-                 <li><code>message: [String]</code></li>
-            </ol>
+            <pre><code>{
+    foundUrlCount: [Number], 
+    url: [String],
+    errorCode: [String],
+    message: [String]
+}</code></pre>
         </td>
     </tr>
     <tr>
         <td>onUrlFindFinish</td>
         <td>Triggered when site map generation is finished</td>
         <td>
-                    <ol>
-                         <li><code>foundUrlCount: [Number]</code></li>
-                    </ol>
+            <pre><code>{
+    foundUrlCount: [Number]
+}</code></pre>
                 </td>
     </tr>
     <tr>
         <td>onScreenshotGenerationStart</td>
         <td>Triggered when screenshot generation starts for specific resolution</td>
         <td>
-                    <ol>
-                         <li><code>foundUrlCount: [Number]</code></li>
-                         <li><code>startIndex: [Number]</code></li>
-                         <li><code>urlsCount: [Number]</code></li>
-                         <li><code>urls: [Array]</code></li>
-                         <li><code>resolutionName: [String]</code></li>
-                    </ol>
+            <pre><code>{
+    foundUrlCount: [Number], 
+    startIndex: [Number],
+    urlsCount: [Number],
+    urls: [Array],
+    resolutionName: [String]
+}</code></pre>
                 </td>
     </tr>
     <tr>
         <td>onScreenshotGenerate</td>
         <td>Triggered when each screenshot image is generated for specific resolution</td>
         <td>
-                    <ol>
-                         <li><code>currentUrlIndex: [Number]</code></li>
-                         <li><code>path: [String]</code></li>
-                         <li><code>resolutionName: [String]</code></li>
-                    </ol>
+            <pre><code>{
+    currentUrlIndex: [Number], 
+    path: [String],
+    resolutionName: [String]
+}</code></pre>
                 </td>
     </tr>
     <tr>
         <td>onScreenshotCompare</td>
         <td>Triggered when existing screenshot is compared to newly generated image for specific resolution</td>
         <td>
-                    <ol>
-                         <li><code>currentUrlIndex: [Number]</code></li>
-                         <li><code>url: [String]</code></li>
-                         <li><code>new: [String]</code></li>
-                         <li><code>stable: [String]</code></li>
-                         <li><code>resolutionName: [String]</code></li>
-                         <li><code>folderName: [String]</code></li>
-                         <li><code>stableImage: [String]</code></li>
-                         <li><code>newImage: [String]</code></li>
-                    </ol>
+            <pre><code>{
+    currentUrlIndex: [Number],
+    url: [String],
+    new: [String],
+    stable: [String],
+    resolutionName: [String],
+    folderName: [String],
+    stableImage: [String],
+    newImage: [String]
+}</code></pre>
                 </td>
     </tr>
     <tr>
         <td>onScreenshotGenerationFinish</td>
         <td>Triggered when screenshot generation is finished for specific resolution</td>
         <td>
-            <ol>
-                <li><code>resolutionName: [String]</code></li>
-                <li><code>folderName: [String]</code></li>
-            </ol>
+            <pre><code>{
+    resolutionName: [String], 
+    folderName: [String]
+}</code></pre>
         </td>
     </tr>
     <tr>
