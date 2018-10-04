@@ -40,7 +40,7 @@ let generator = new Generator({
     },
     onUrlFindFinish: function (data) {
         winston.log('info', `Totally grabbed ${data.foundUrlCount} urls`);
-        logUpdate(`Finished finding urls for ${data.resolutionName}. Found: ${data.foundUrlCount}`)
+        logUpdate(`Finished finding urls. Found: ${data.foundUrlCount}`)
     },
     onScreenshotGenerationStart: function (data) {
         progressBar.start(data.urlsCount, data.startIndex);
