@@ -26,7 +26,7 @@ You need to have node version above 8
 ### Generating screenshots for resolution(s) via CLI
 
 ```
-node app.js [options]
+node src/app.js [options]
 ```
 ##### CLI Options
 
