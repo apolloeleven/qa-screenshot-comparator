@@ -9,7 +9,7 @@ const winston = require('winston');
 
 const conf = require('./src/config/conf');
 const yargsConfig = require('./src/config/yargs-config');
-const Generator = require('./generator');
+const Generator = require('./src/generator');
 
 const argv = yargs
     .options(yargsConfig)
