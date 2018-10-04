@@ -4,7 +4,7 @@
 
 let env;
 try {
-    env = require('../env');
+    env = require('./env');
 } catch (ex) {
     env = {
         authParams: {
