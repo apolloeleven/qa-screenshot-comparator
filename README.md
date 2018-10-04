@@ -161,7 +161,7 @@ let authParams = {
     </tr>
     <tr>
         <td>onScreenshotCompare</td>
-        <td>Triggered when existing screenshot is compared to newly generated image for specific resolution</td>
+        <td>Triggered when existing screenshot is compared to newly generated image for specific resolution. <code>newImage</code> and <code>stableImage</code> will be only present if comparator found any changes.</td>
         <td>
             <pre><code>{
     currentUrlIndex: [Number],
@@ -170,8 +170,8 @@ let authParams = {
     stable: [String],
     resolutionName: [String],
     folderName: [String],
-    stableImage: [String],
-    newImage: [String]
+    stableImage: [String][Optional],
+    newImage: [String][Optional]
 }</code></pre>
                 </td>
     </tr>
