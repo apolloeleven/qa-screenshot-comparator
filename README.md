@@ -55,9 +55,9 @@ node app.js -u=http://example.com -s=desktop -s=mobile -f=first_website_folder
 
 ### API
 ```node
-const {generator} = require('qa-screenshot-comparator');
+const {Generator} = require('qa-screenshot-comparator');
 
-let generatorInstance = new generator({
+let generatorInstance = new Generator({
     url: <Required> [String: website url],
     resolutionName: <Required> [String|Array: resolution(s)], // Available options [ desktop, laptop, tablet, mobile, all ]
     runtime: <Required> [String: The path for the generation of screenshots],
