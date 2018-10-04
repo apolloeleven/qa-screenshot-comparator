@@ -4,8 +4,8 @@ const fs = require('fs-extra');
 const path = require('path');
 const md5 = require('md5');
 const thumb = require('node-thumbnail').thumb;
-const conf = require('./src/config/conf');
-const compareImage = require('./src/helpers/compare-image');
+const conf = require('./config/conf');
+const compareImage = require('./helpers/compare-image');
 const SitemapGenerator = require('sitemap-generator');
 
 const frames = ['-', '\\', '|', '/'];
