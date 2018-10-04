@@ -58,14 +58,14 @@ node app.js -u=http://example.com -s=desktop -s=mobile -f=first_website_folder
 const {generator} = require('qa-screenshot-comparator');
 
 let generatorInstance = new generator({
-    url: [String: website url],
-    generateSitemap: [Boolean: whether to generate sitemap for url],
-    authParams: [Object: HTTP basic auth params],
-    includeThumbnails: [Boolean: whether to generate thumbnails for each resolution],
-    thumbnailWidth: [Number: thumnail width to be generated],
-    resolutionName: [String|Array: resolution(s)],
-    folderName: [String: folder name, if left blank, then url will be folder name],
-    runtime: [String: path for the generation of screenshots],
+    url: <Required> [String: website url],
+    resolutionName: <Required> [String|Array: resolution(s)], // Available options [ desktop, laptop, tablet, mobile, all ]
+    runtime: <Required> [String: The path for the generation of screenshots],
+    generateSitemap: <Optional - default: true> [Boolean: whether to generate sitemap for url],
+    authParams: <Optional - default: {}> [Object: HTTP basic auth params],
+    includeThumbnails: <Optional - default: false> [Boolean: whether to generate thumbnails for each image],
+    thumbnailWidth: <Optional - default: 240> [Number: thumnail width in pixels],
+    folderName: <Optional - default: automatically generated from url> [String: folder name],
     onUrlFound: function (data) { },
     onUrlFindError: function (data) { },
     onUrlFindFinish: function (data) { },
@@ -79,7 +79,7 @@ let generatorInstance = new generator({
 generatorInstance.run();
 ```
 
-#### HTTP basic auth object
+#### `authParams` is an object with this template
 ```node
 let authParams = {
     HTTP_BASIC_AUTH: [Boolean: whether to run authentication],
@@ -87,6 +87,7 @@ let authParams = {
     HTTP_BASIC_AUTH_PASSWORD: [String: auth password]
 };
 ```
+
 #### Generator event listeners
 
 | Events                             | Description                                                                                                     | Response object properties                                                                           |
@@ -100,11 +101,6 @@ let authParams = {
 | onScreenshotGenerationFinish       | Triggered when screenshot generation is finished for specific resolution                                        |   resolutionName<br>folderName                                                                       |
 | onScreenshotThumbnailGenerate      | Triggered when thumbnail is generated for a specific image                                                      |    $1                                                                                                |
 | onScreenshotThumbnailGenerateError | Triggered when thumbnail generation failed for a specific image                                                 |    $1                                                                                                |
-
-#### Available sizes
-```
-[ desktop, laptop, tablet, mobile, all ]
-```
 
 #### Resolutions
 ```
