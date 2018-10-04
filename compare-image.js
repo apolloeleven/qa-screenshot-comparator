@@ -3,11 +3,12 @@
  */
 
 const util = require('util');
+const path = require('path');
 const exec = util.promisify(require('child_process').exec);
 
 module.exports.isTheSame = isTheSame;
 
 function isTheSame(expectedImage, originalImage, outputPath) {
-    const phpFile = __dirname + '/index-single.php';
+    const phpFile = __dirname + '/src/php-helpers/index-single.php';
     return exec(`php ${phpFile} ${expectedImage} ${originalImage} ${outputPath}`);
 }
