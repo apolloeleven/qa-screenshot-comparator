@@ -7,9 +7,9 @@ const path = require('path');
 const logUpdate = require('log-update');
 const winston = require('winston');
 
-const conf = require('./src/config/conf');
-const yargsConfig = require('./src/config/yargs-config');
-const Generator = require('./src/generator');
+const conf = require('./config/conf');
+const yargsConfig = require('./config/yargs-config');
+const Generator = require('./generator');
 
 const argv = yargs
     .options(yargsConfig)
@@ -19,7 +19,7 @@ const argv = yargs
 
 let progressBar = new _cliProgress.Bar({}, _cliProgress.Presets.shades_classic);
 const ROOT_PATH = path.dirname(require.main.filename);
-const RUNTIME = `${ROOT_PATH}/runtime`;
+const RUNTIME = path.join(ROOT_PATH, `/../runtime`);
 
 let generator = new Generator({
     url: argv.url,
