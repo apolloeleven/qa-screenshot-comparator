@@ -116,7 +116,7 @@ class ImageCompare
             }
         }
 
-        $font = __DIR__ . '/Roboto-Regular.ttf';
+        $font = __DIR__ . '/assets/Roboto-Regular.ttf';
         $red = imagecolorallocate($resource, 255, 0, 0);
 
         $isTheSame = true;
