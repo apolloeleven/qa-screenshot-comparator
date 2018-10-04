@@ -26,7 +26,7 @@ class Generator {
         this.authParams = params.authParams;
 
         //Event listeners
-        this.onUrlFound = params.onUrlFound;
+        this.onUrlFind = params.onUrlFind;
         this.onUrlFindFinish = params.onUrlFindFinish;
         this.onUrlFindError = params.onUrlFindError;
         this.onScreenshotGenerationStart = params.onScreenshotGenerationStart;
@@ -179,9 +179,9 @@ class Generator {
 
                 await page.screenshot({path: newFile, fullPage: true});
                 this.triggerEvent('onScreenshotGenerate', {
-                    'currentUrlIndex': this.urls.indexOf(url),
-                    'path': newFile,
-                    'url': url,
+                    currentUrlIndex: this.urls.indexOf(url),
+                    path: newFile,
+                    url: url,
                     resolutionName: resolutionName
                 });
 
@@ -261,7 +261,7 @@ class Generator {
 
             generator.on('add', (url) => {
                 urls.push(url);
-                this.triggerEvent("onUrlFound", {
+                this.triggerEvent("onUrlFind", {
                     frame: frame,
                     foundUrlCount: urls.length,
                     url: url
