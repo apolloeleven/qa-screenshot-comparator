@@ -11,7 +11,17 @@
 
 [![npm version](https://badge.fury.io/js/1.0.3.svg)](https://www.npmjs.com/package/qa-screenshot-comparator)
 
+## Requirements
 
+You need to have node version above 8
+
+## Installation
+
+1. If you want to install the project as standalone application, clone the project and run `npm install`
+
+2. If you want to install the project as dependency of your application and use its API, run `npm install qa-screenshot-comparator`
+
+## Usage
 
 ### Generating screenshots for resolution(s) via CLI
 
@@ -28,17 +38,23 @@ node app.js [options]
     -f FOLDER, --folder
     
 ##### Examples
+Generating screenshots for all resolutions
 ```
-// Generating screenshots for all resolutions
 node app.js -u=http://example.com -s=all -f=first_website_folder
-// Generating screenshots for only for desktop
+```
+
+Generating screenshots for only for desktop
+```
 node app.js -u=http://example.com -s=desktop -f=first_website_folder
-// Generating screenshots for desktop and mobile
+```
+
+Generating screenshots for desktop and mobile
+```
 node app.js -u=http://example.com -s=desktop -s=mobile -f=first_website_folder
 ```
 
 ### API 
-```
+```node
 const {generator} = require('qa-screenshot-comparator');
 
 let generatorInstance = new generator({
@@ -64,7 +80,7 @@ generatorInstance.run();
 ```
 
 #### HTTP basic auth object
-```
+```node
 let authParams = {
     HTTP_BASIC_AUTH: [Boolean: whether to run authentication],
     HTTP_BASIC_AUTH_USERNAME: [String: auth username],
@@ -86,9 +102,9 @@ let authParams = {
 | onScreenshotThumbnailGenerateError | Triggered when thumbnail generation failed for a specific image                                                 |    $1                                                                                                |
 
 #### Available sizes
-``
+```
 [ desktop, laptop, tablet, mobile, all ]
-``
+```
 
 #### Resolutions
 ```
