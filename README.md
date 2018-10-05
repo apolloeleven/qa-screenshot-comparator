@@ -40,17 +40,17 @@ node src/app.js [options]
 ##### Examples
 Generating screenshots for all resolutions
 ```
-node app.js -u=http://example.com -s=all -f=first_website_folder
+node src/app.js -u=http://example.com -s=all -f=first_website_folder
 ```
 
 Generating screenshots for only for desktop
 ```
-node app.js -u=http://example.com -s=desktop -f=first_website_folder
+node src/app.js -u=http://example.com -s=desktop -f=first_website_folder
 ```
 
 Generating screenshots for desktop and mobile
 ```
-node app.js -u=http://example.com -s=desktop -s=mobile -f=first_website_folder
+node src/app.js -u=http://example.com -s=desktop -s=mobile -f=first_website_folder
 ```
 
 ### API
