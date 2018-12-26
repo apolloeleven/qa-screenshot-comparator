@@ -14,6 +14,9 @@ let siteMapIndex = 0;
 class Generator {
   constructor(params) {
     this.url = params.url;
+    this.outputFolder = params.outputFolder || 'output';
+    this.currentFolder = params.currentFolder || 'current';
+    this.stableFolder = params.stableFolder || 'stable';
     this.generateSitemap = params.generateSitemap;
     this.urls = [];
     this.resolutionName = params.resolutionName;
@@ -38,7 +41,7 @@ class Generator {
     this.FILE_MAX_LENGTH = 214;
 
     fs.ensureDirSync(this.sitesFolder);
-    this.outputPath = this.sitesFolder + '/output/' + this.resolutionName;
+    this.outputPath = this.sitesFolder + `/${this.outputFolder}/` + this.resolutionName;
     winston.configure({
       transports: [
         new (winston.transports.File)({filename: `${this.RUNTIME}/output.log`})
@@ -55,7 +58,7 @@ class Generator {
     if (typeof this.resolutionName === 'string') {
       if (this.resolutionName === 'all') {
         for (let resolution in conf.SCREEN_RESOLUTIONS) {
-          imageFolder = `${this.sitesFolder}/current/${resolution}`;
+          imageFolder = `${this.sitesFolder}/${this.currentFolder}/${resolution}`;
           fs.emptyDirSync(imageFolder);
           if (this.includeThumbnails) {
             fs.emptyDirSync(`${imageFolder}-thumbnails`)
@@ -65,7 +68,7 @@ class Generator {
           }));
         }
       } else {
-        imageFolder = `${this.sitesFolder}/current/${this.resolutionName}`;
+        imageFolder = `${this.sitesFolder}/${this.currentFolder}/${this.resolutionName}`;
         fs.emptyDirSync(imageFolder);
         if (this.includeThumbnails) {
           fs.emptyDirSync(`${imageFolder}-thumbnails`)
@@ -77,7 +80,7 @@ class Generator {
     } else if (typeof this.resolutionName === 'object') {
       if (this.resolutionName.includes('all')) {
         for (let resolution in conf.SCREEN_RESOLUTIONS) {
-          imageFolder = `${this.sitesFolder}/current/${resolution}`;
+          imageFolder = `${this.sitesFolder}/${this.currentFolder}/${resolution}`;
           fs.emptyDirSync(imageFolder);
           if (this.includeThumbnails) {
             fs.emptyDirSync(`${imageFolder}-thumbnails`)
@@ -88,7 +91,7 @@ class Generator {
         }
       } else {
         for (let i in this.resolutionName) {
-          imageFolder = `${this.sitesFolder}/current/${this.resolutionName[i]}`;
+          imageFolder = `${this.sitesFolder}/${this.currentFolder}/${this.resolutionName[i]}`;
           fs.emptyDirSync(imageFolder);
           if (this.includeThumbnails) {
             fs.emptyDirSync(`${imageFolder}-thumbnails`)
@@ -200,9 +203,9 @@ class Generator {
         }
 
         //Compare images if stable folder exist
-        let stableFile = newFile.replace('/current/', '/stable/');
+        let stableFile = newFile.replace(`/${this.currentFolder}/`, `/${this.stableFolder}/`);
         if (fs.existsSync(stableFile)) {
-          let output = newFile.replace('/current/', '/output/');
+          let output = newFile.replace(`/${this.currentFolder}/`, `/${this.outputFolder}/`);
           await compareImage.isTheSame(stableFile, newFile, path.dirname(output)).then((result) => {
             winston.info(result.stdout);
           });
