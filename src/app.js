@@ -30,6 +30,7 @@ let generator = new Generator({
     resolutionName: argv.size,
     folderName: argv.folder,
     runtime: RUNTIME,
+    includeWebsitesFolder: true,
     onUrlFind: function (data) {
         winston.log('info', `Grabbed url ${data.url}`);
         logUpdate(`☕☕ ${data.frame} Found ${data.foundUrlCount} urls. Current: ${data.url} ${data.frame} ☕☕`);

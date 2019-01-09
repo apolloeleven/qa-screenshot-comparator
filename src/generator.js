@@ -13,6 +13,8 @@ let siteMapIndex = 0;
 
 class Generator {
   constructor(params) {
+    const websitesFolderName = params.includeWebsitesFolder ? "/websites/" : '/';
+
     this.url = params.url;
     this.outputFolder = params.outputFolder || 'output';
     this.currentFolder = params.currentFolder || 'current';
@@ -25,7 +27,7 @@ class Generator {
     this.RUNTIME = params.runtime;
     this.websiteName = this.url.replace(/^\/|\/$/g, '').replace(/^https?:\/\//, '').replace(/[\.\/]+/g, '-');
     this.folderName = params.folderName;
-    this.sitesFolder = `${this.RUNTIME}/websites/${this.folderName ? this.folderName : this.websiteName}`;
+    this.sitesFolder = `${this.RUNTIME}${websitesFolderName}${this.folderName ? this.folderName : this.websiteName}`;
     this.authParams = params.authParams;
 
     //Event listeners
