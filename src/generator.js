@@ -3,7 +3,8 @@ const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 const path = require('path');
 const md5 = require('md5');
-const thumb = require('node-thumbnail').thumb;
+const Jimp = require('jimp');
+
 const conf = require('./config/conf');
 const compareImage = require('./helpers/compare-image');
 const SitemapGenerator = require('sitemap-generator');
@@ -43,7 +44,9 @@ class Generator {
     this.FILE_MAX_LENGTH = 214;
 
     fs.ensureDirSync(this.sitesFolder);
-    this.outputPath = this.sitesFolder + `/${this.outputFolder}/` + this.resolutionName;
+
+    this.outputPath = this.sitesFolder + `/${this.outputFolder}/`;
+
     winston.configure({
       transports: [
         new (winston.transports.File)({filename: `${this.RUNTIME}/output.log`})
@@ -52,7 +55,6 @@ class Generator {
   }
 
   async run() {
-    this.clearOutput();
     this.urls = await this.generateSiteMap(this.url, this.generateSitemap);
     let promiseArray = [];
     let imageFolder = '';
@@ -61,20 +63,20 @@ class Generator {
       if (this.resolutionName === 'all') {
         for (let resolution in conf.SCREEN_RESOLUTIONS) {
           imageFolder = `${this.sitesFolder}/${this.currentFolder}/${resolution}`;
-          fs.emptyDirSync(imageFolder);
-          if (this.includeThumbnails) {
-            fs.emptyDirSync(`${imageFolder}-thumbnails`)
-          }
+
+          this.emptyDirs(imageFolder, resolution);
+
+          // Push promise to generation array
           promiseArray.push(this.generateScreenshots(this.urls, resolution, imageFolder).catch(err => {
             winston.info(err);
           }));
         }
       } else {
         imageFolder = `${this.sitesFolder}/${this.currentFolder}/${this.resolutionName}`;
-        fs.emptyDirSync(imageFolder);
-        if (this.includeThumbnails) {
-          fs.emptyDirSync(`${imageFolder}-thumbnails`)
-        }
+
+        this.emptyDirs(imageFolder, this.resolutionName);
+
+        // Push promise to generation array
         promiseArray.push(this.generateScreenshots(this.urls, this.resolutionName, imageFolder).catch(err => {
           winston.info(err);
         }));
@@ -83,10 +85,10 @@ class Generator {
       if (this.resolutionName.includes('all')) {
         for (let resolution in conf.SCREEN_RESOLUTIONS) {
           imageFolder = `${this.sitesFolder}/${this.currentFolder}/${resolution}`;
-          fs.emptyDirSync(imageFolder);
-          if (this.includeThumbnails) {
-            fs.emptyDirSync(`${imageFolder}-thumbnails`)
-          }
+
+          this.emptyDirs(imageFolder, resolution);
+
+          // Push promise to generation array
           promiseArray.push(this.generateScreenshots(this.urls, resolution, imageFolder).catch(err => {
             winston.info(err);
           }));
@@ -94,10 +96,10 @@ class Generator {
       } else {
         for (let i in this.resolutionName) {
           imageFolder = `${this.sitesFolder}/${this.currentFolder}/${this.resolutionName[i]}`;
-          fs.emptyDirSync(imageFolder);
-          if (this.includeThumbnails) {
-            fs.emptyDirSync(`${imageFolder}-thumbnails`)
-          }
+
+          this.emptyDirs(imageFolder, this.resolutionName[i]);
+
+          // Push promise to generation array
           promiseArray.push(this.generateScreenshots(this.urls, this.resolutionName[i], imageFolder).catch(err => {
             winston.info(err);
           }));
@@ -194,20 +196,15 @@ class Generator {
 
         //Generating thumbnails for screenshots async
         if (this.includeThumbnails) {
-          await thumb({
-            source: newFile,
-            destination: `${folderPath}-thumbnails`,
-            overwrite: true,
-            quiet: true,
-            concurrency: 4,
-            width: this.thumbnailWidth
-          });
+          await this.generateThumb(newFile, `${folderPath}-thumbnails/${path.basename(newFile).replace('.png', '_thumb.png')}`);
         }
 
         //Compare images if stable folder exist
         let stableFile = newFile.replace(`/${this.currentFolder}/`, `/${this.stableFolder}/`);
         if (fs.existsSync(stableFile)) {
           let output = newFile.replace(`/${this.currentFolder}/`, `/${this.outputFolder}/`);
+          let resolutionOutputFolderPath = path.dirname(output);
+
           await compareImage.isTheSame(stableFile, newFile, path.dirname(output)).then((result) => {
             winston.info(result.stdout);
           });
@@ -228,6 +225,16 @@ class Generator {
             try {
               fs.accessSync(stableImage, fs.constants.R_OK);
               params.stableImage = stableImage;
+
+              if (this.includeThumbnails) {
+                const outputThumbDestination = `${resolutionOutputFolderPath}-thumbnails`;
+                if (!fs.existsSync(outputThumbDestination)) {
+                  fs.mkdirSync(outputThumbDestination);
+                }
+                await this.generateThumb(newImage,`${outputThumbDestination}/${path.basename(newImage).replace('.png','_thumb.png')}`)
+                await this.generateThumb(stableImage,`${outputThumbDestination}/${path.basename(stableImage).replace('.png','_thumb.png')}`)
+              }
+
               this.triggerEvent('onScreenshotCompare', params);
             } catch (err) {
             }
@@ -244,6 +251,22 @@ class Generator {
       }
     });
   };
+
+  generateThumb(imageFrom, destionation) {
+    return new Promise((resolve, reject) => {
+      Jimp.read(imageFrom).then(image => {
+        const width = image.getWidth();
+        image
+          .crop(0, 0, width, width)
+          .resize(this.thumbnailWidth, this.thumbnailWidth)
+          .write(destionation);
+        resolve(destionation);
+      }).catch(error => {
+        console.log(error);
+        reject(error);
+      })
+    })
+  }
 
   generateSiteMap(url, generateSitemap) {
 
@@ -316,10 +339,14 @@ class Generator {
     }
   }
 
-  clearOutput() {
-    fs.removeSync(this.outputPath);
+  emptyDirs(imageFolder, resolution) {
+    fs.emptyDirSync(imageFolder);
+    fs.emptyDirSync(`${this.outputPath}/${resolution}`);
+    if (this.includeThumbnails) {
+      fs.emptyDirSync(`${imageFolder}-thumbnails`);
+      fs.emptyDirSync(`${this.outputPath}/${resolution}-thumbnails`);
+    }
   }
-
 }
 
 // export the class
