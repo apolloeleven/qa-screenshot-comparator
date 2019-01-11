@@ -231,8 +231,13 @@ class Generator {
                 if (!fs.existsSync(outputThumbDestination)) {
                   fs.mkdirSync(outputThumbDestination);
                 }
-                await this.generateThumb(newImage,`${outputThumbDestination}/${path.basename(newImage).replace('.png','_thumb.png')}`)
-                await this.generateThumb(stableImage,`${outputThumbDestination}/${path.basename(stableImage).replace('.png','_thumb.png')}`)
+                let newImgThumb = `${outputThumbDestination}/${path.basename(newImage).replace('.png','_thumb.png')}`;
+                let stableImgThumb = `${outputThumbDestination}/${path.basename(stableImage).replace('.png','_thumb.png')}`;
+
+                await this.generateThumb(newImage,newImgThumb);
+                await this.generateThumb(stableImage,stableImgThumb);
+                params.new_thumb = newImgThumb;
+                params.stable_thumb = stableImgThumb;
               }
 
               this.triggerEvent('onScreenshotCompare', params);
