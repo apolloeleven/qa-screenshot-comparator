@@ -283,7 +283,6 @@ class Generator {
       needsAuth: this.authParams.HTTP_BASIC_AUTH,
       authUser: this.authParams.HTTP_BASIC_AUTH_USERNAME,
       authPass: this.authParams.HTTP_BASIC_AUTH_PASSWORD,
-      stripWWWDomain: true,
       emitENOTFOUNDError: true
     });
     const crawler = generator.getCrawler();
@@ -309,6 +308,7 @@ class Generator {
         this.triggerEvent("onUrlFindFinish", {
           foundUrlCount: urls.length
         });
+        urls = this.parseUrlsForIdentical(url, urls);
         fs.writeFileSync(URLS_FILE, JSON.stringify(urls, undefined, 2));
         resolve(urls);
       });
@@ -335,6 +335,7 @@ class Generator {
           generator.start();
         } catch (e) {
           console.error(`Website is offline ${url}`);
+          urls = this.parseUrlsForIdentical(url, urls);
           resolve(urls);
           return;
         }
@@ -347,6 +348,54 @@ class Generator {
       }
     });
   };
+
+  parseUrlsForIdentical(uri, urls) {
+
+    const host = this.extractHostname(uri);
+    const needWWW = host.includes('www');
+
+    let wwwArr = [];
+    let notWWWArr = [];
+
+    for (let url of urls) {
+      const tmpHost = this.extractHostname(url);
+      if (tmpHost.includes('www')) {
+        wwwArr.push(url)
+      } else {
+        notWWWArr.push(url)
+      }
+    }
+
+    if (wwwArr.length && notWWWArr.length) {
+      if (needWWW) {
+        return wwwArr
+      } else {
+        return notWWWArr;
+      }
+    } else {
+      return wwwArr.length ? wwwArr : notWWWArr;
+    }
+  }
+
+  extractHostname(url) {
+    var hostname;
+    //find & remove protocol (http, ftp, etc.) and get hostname
+
+    if (url.indexOf("//") > -1) {
+      hostname = url.split('/')[2];
+    }
+    else {
+      hostname = url.split('/')[0];
+    }
+
+    //find & remove port number
+    hostname = hostname.split(':')[0];
+    //find & remove "?"
+    hostname = hostname.split('?')[0];
+
+    return hostname;
+  }
+
 
   triggerEvent(eventName, data) {
     if (typeof this[eventName] === 'function') {
