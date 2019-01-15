@@ -231,11 +231,11 @@ class Generator {
                 if (!fs.existsSync(outputThumbDestination)) {
                   fs.mkdirSync(outputThumbDestination);
                 }
-                let newImgThumb = `${outputThumbDestination}/${path.basename(newImage).replace('.png','_thumb.png')}`;
-                let stableImgThumb = `${outputThumbDestination}/${path.basename(stableImage).replace('.png','_thumb.png')}`;
+                let newImgThumb = `${outputThumbDestination}/${path.basename(newImage).replace('.png', '_thumb.png')}`;
+                let stableImgThumb = `${outputThumbDestination}/${path.basename(stableImage).replace('.png', '_thumb.png')}`;
 
-                await this.generateThumb(newImage,newImgThumb);
-                await this.generateThumb(stableImage,stableImgThumb);
+                await this.generateThumb(newImage, newImgThumb);
+                await this.generateThumb(stableImage, stableImgThumb);
                 params.new_thumb = newImgThumb;
                 params.stable_thumb = stableImgThumb;
               }
@@ -282,7 +282,9 @@ class Generator {
       stripQuerystring: true,
       needsAuth: this.authParams.HTTP_BASIC_AUTH,
       authUser: this.authParams.HTTP_BASIC_AUTH_USERNAME,
-      authPass: this.authParams.HTTP_BASIC_AUTH_PASSWORD
+      authPass: this.authParams.HTTP_BASIC_AUTH_PASSWORD,
+      stripWWWDomain: true,
+      emitENOTFOUNDError: true
     });
     const crawler = generator.getCrawler();
     const extRegex = new RegExp(`\\.(pdf|xml|tif)$`, 'i');
@@ -312,6 +314,14 @@ class Generator {
       });
       generator.on('error', async (object) => {
         urls.push(object.url);
+        this.triggerEvent("onUrlFindError", {
+          foundUrlCount: urls.length,
+          url: object.url,
+          errorCode: object.code,
+          message: object.message
+        });
+      });
+      generator.on('ENOTFOUNDError', async (object) => {
         this.triggerEvent("onUrlFindError", {
           foundUrlCount: urls.length,
           url: object.url,
