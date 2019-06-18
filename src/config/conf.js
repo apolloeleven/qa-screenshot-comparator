@@ -9,8 +9,8 @@ try {
     env = {
         authParams: {
             HTTP_BASIC_AUTH: true,
-            HTTP_BASIC_AUTH_USERNAME: 'bcuser',
-            HTTP_BASIC_AUTH_PASSWORD: 'bc11user'
+            HTTP_BASIC_AUTH_USERNAME: 'john',
+            HTTP_BASIC_AUTH_PASSWORD: 'doe'
         }
     }
 }
