@@ -30,6 +30,7 @@ class Generator {
     this.folderName = params.folderName;
     this.sitesFolder = `${this.RUNTIME}${websitesFolderName}${this.folderName ? this.folderName : this.websiteName}`;
     this.authParams = params.authParams;
+    this.pageLoadTimeout = params.pageLoadTimeout || 30000;
 
     //Event listeners
     this.onUrlFind = params.onUrlFind;
@@ -172,7 +173,7 @@ class Generator {
             password: this.authParams.HTTP_BASIC_AUTH_PASSWORD
           });
         }
-        await page.goto(url, {timeout: 30000});
+        await page.goto(url, {timeout: this.pageLoadTimeout});
 
         let image = imageName === '' ? "_" + md5(imageName) : imageName;
         let folderPath = `${imageFolder}`;
@@ -383,8 +384,7 @@ class Generator {
 
     if (url.indexOf("//") > -1) {
       hostname = url.split('/')[2];
-    }
-    else {
+    } else {
       hostname = url.split('/')[0];
     }
 
