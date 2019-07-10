@@ -16,8 +16,6 @@ require "CliColor.php";
 class Logger
 {
     private $cliColor;
-//    private $slackUrl = 'https://hooks.slack.com/services/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';
-    private $slackUrl = 'https://hooks.slack.com/services/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';
 
     public function __construct()
     {
