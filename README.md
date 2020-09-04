@@ -13,7 +13,7 @@
 
 ## Requirements
 
-You need to have node version above 8
+You need to have node version above 8 and bellow 10
 
 ## Installation
 
